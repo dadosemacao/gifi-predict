@@ -1,0 +1,17 @@
+id: TC-05-baseline-tpc65
+type: baseline
+mode: B
+description: "Baseline TC-05 com TPC=65"
+inputs:
+  pct_A: 0.2
+  pct_B: 0.2
+  pct_C: 0.2
+  pct_D: 0.2
+  pct_MG: 0.2
+  Idade: 8
+  TPC: 65
+  Volume: 8600
+  DB_SGF: 483
+  Kappa: 17.0
+  Extrativo_AT: 2.0
+  Carga_Alcalina: 19.5

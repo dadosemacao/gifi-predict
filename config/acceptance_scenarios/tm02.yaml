@@ -1,0 +1,9 @@
+id: TM-02
+type: monotonic
+mode: B
+anchor: anchor_mixed
+variable: Extrativo_AT
+sequence: [1.6, 2.0, 2.3, 2.6]
+expect:
+  direction: down
+normative_ref: "CASOS_TESTE_FUNCIONAIS_GIFI_v1.1.md TM-02"

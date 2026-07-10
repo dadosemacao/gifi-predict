@@ -1,0 +1,20 @@
+id: TC-09
+type: matriz_c
+mode: B
+description: "Detrator TPC — cenário TC-05"
+normative_ref: "CASOS_TESTE_FUNCIONAIS_GIFI_v1.1.md TC-09"
+inputs:
+  pct_A: 0.2
+  pct_B: 0.2
+  pct_C: 0.2
+  pct_D: 0.2
+  pct_MG: 0.2
+  Idade: 8
+  TPC: 30
+  Volume: 8600
+  DB_SGF: 483
+  Kappa: 17.0
+  Extrativo_AT: 2.0
+  Carga_Alcalina: 19.5
+expect:
+  required_any: [TPC]

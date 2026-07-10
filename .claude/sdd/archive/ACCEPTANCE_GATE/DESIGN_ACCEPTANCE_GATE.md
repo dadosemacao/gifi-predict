@@ -10,7 +10,7 @@
 | **Date** | 2026-07-10 |
 | **Author** | Emerson Antônio (design-agent) |
 | **DEFINE** | [DEFINE_ACCEPTANCE_GATE.md](./DEFINE_ACCEPTANCE_GATE.md) |
-| **Status** | Ready for Build |
+| **Status** | Shipped |
 | **Stack** | Python 3.11+, pandas, scikit-learn, joblib, shap, pydantic v2, PyYAML, typer, pytest |
 | **Depends on** | Camada 2 (L2), Camada 3 (`src/simulation/`) shipped |
 
@@ -631,16 +631,10 @@ io:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-07-10 | design-agent | DESIGN inicial Camada 4 |
+| 1.1 | 2026-07-10 | ship-agent | Shipped and archived |
 
 ---
 
 ## Next Step
 
-**Ready for:** `/build .claude/sdd/features/DESIGN_ACCEPTANCE_GATE.md`
-
-**Agentes no Build:**
-
-- **Owner:** `gifi-acceptance-engineer`
-- **Normativo:** `gifi-domain-specialist` (validar YAML TC/TM)
-- **Integração:** `gifi-simulation-engineer`
-- **Testes:** `test-generator`
+**Shipped:** ver [SHIPPED_2026-07-10.md](./SHIPPED_2026-07-10.md)

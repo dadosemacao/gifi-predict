@@ -1,0 +1,20 @@
+id: TC-10
+type: matriz_c
+mode: B
+description: "Detratores Extrativo/Carga — cenário TC-03"
+normative_ref: "CASOS_TESTE_FUNCIONAIS_GIFI_v1.1.md TC-10"
+inputs:
+  pct_A: 0.0
+  pct_B: 0.0
+  pct_C: 1.0
+  pct_D: 0.0
+  pct_MG: 0.0
+  Idade: 8
+  TPC: 55
+  Volume: 8600
+  DB_SGF: 455
+  Kappa: 18.0
+  Extrativo_AT: 2.6
+  Carga_Alcalina: 21.5
+expect:
+  required_any: [Extrativo_AT, Carga_Alcalina]

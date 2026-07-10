@@ -9,7 +9,7 @@
 | **Feature** | ACCEPTANCE_GATE |
 | **Date** | 2026-07-10 |
 | **Author** | Emerson Antônio (define-agent) |
-| **Status** | Design Complete |
+| **Status** | Shipped |
 | **Clarity Score** | 15/15 |
 | **Source** | Simulation shipped (`.claude/sdd/archive/SIMULATION_ENGINE/`), `docs/sketch/analytical-backbone.md` §Camada 4, PRD §4.3 |
 | **Normative refs** | `docs/kb/gifi-domain/concepts/acceptance-matrices.md`, `patterns/champion-policy.md`, `docs/CASOS_TESTE_FUNCIONAIS_GIFI_v1.1.md` |
@@ -267,14 +267,15 @@ A Camada 3 produz candidatos com métricas de holdout (`metrics_holdout.json`) e
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-07-10 | define-agent | DEFINE inicial Camada 4 |
+| 1.1 | 2026-07-10 | ship-agent | Shipped and archived |
 
 ---
 
 ## Next Step
 
-**Completed:** `/design` → [DESIGN_ACCEPTANCE_GATE.md](./DESIGN_ACCEPTANCE_GATE.md)
+**Shipped:** [SHIPPED_2026-07-10.md](./SHIPPED_2026-07-10.md) — arquivado em `.claude/sdd/archive/ACCEPTANCE_GATE/`
 
-**Ready for:** `/build .claude/sdd/features/DESIGN_ACCEPTANCE_GATE.md`
+**Próximo marco:** Camada 5 (UI) em modo demo, ou completar TC-01…08 na Matriz B.
 
 **Agentes recomendados no Design:**
 

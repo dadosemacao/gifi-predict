@@ -1,0 +1,9 @@
+id: TM-03
+type: monotonic
+mode: A
+anchor: anchor_mixed
+variable: TPC
+sequence: [75, 60, 45, 30]
+expect:
+  direction: down
+normative_ref: "CASOS_TESTE_FUNCIONAIS_GIFI_v1.1.md TM-03"

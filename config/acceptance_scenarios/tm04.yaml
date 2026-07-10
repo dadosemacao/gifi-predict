@@ -1,0 +1,9 @@
+id: TM-04
+type: monotonic
+mode: A
+anchor: anchor_mixed
+variable: VMI
+sequence: [0.30, 0.25, 0.21, 0.18]
+expect:
+  direction: down
+normative_ref: "CASOS_TESTE_FUNCIONAIS_GIFI_v1.1.md TM-04"

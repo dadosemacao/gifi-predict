@@ -221,6 +221,8 @@ data/l2/
 data/l2_excel_validation/
 logs/ingest/
 logs/simulation/
+logs/acceptance/
+reports/acceptance/
 /models/
 catboost_info/
 **/.DS_Store

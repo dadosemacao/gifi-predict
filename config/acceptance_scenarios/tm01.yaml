@@ -1,0 +1,9 @@
+id: TM-01
+type: monotonic
+mode: A
+anchor: anchor_mixed
+variable: DB_LAB
+sequence: [520, 490, 460, 440]
+expect:
+  direction: non_up
+normative_ref: "CASOS_TESTE_FUNCIONAIS_GIFI_v1.1.md TM-01"
