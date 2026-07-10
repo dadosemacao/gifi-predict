@@ -1,0 +1,258 @@
+# Knowledge Base Index — Projeto GIFI (AgentSpec-compatible)
+# Autor: Emerson Antônio
+# Data: 2026-07-09
+# Escopo: KBs de domínio do repositório (não substitui AgentSpec global)
+
+version: "0.2.3"
+last_updated: "2026-07-09"
+location: docs/kb/
+owner: Emerson Antônio
+
+limits:
+  quick_reference: 100
+  concept: 150
+  pattern: 200
+  spec: null
+
+related_agentspec_domains:
+  - data-quality
+  - data-modeling
+  - medallion
+  - python
+  - pydantic
+  - testing
+  - airflow
+  - ml-tabular
+  - frontend-react
+
+agents:
+  gifi-domain-specialist:
+    path: .cursor/agents/gifi-domain-specialist.md
+    skill: .cursor/skills/gifi-domain-specialist/SKILL.md
+    kb_domains: [gifi-domain]
+    tier: T2
+  gifi-ingest-engineer:
+    path: .cursor/agents/gifi-ingest-engineer.md
+    skill: .cursor/skills/gifi-ingest-engineer/SKILL.md
+    kb_domains: [gifi-ingest, gifi-domain, spreadsheet-connectors]
+    tier: T2
+  gifi-simulation-engineer:
+    path: .cursor/agents/gifi-simulation-engineer.md
+    skill: .cursor/skills/gifi-simulation-engineer/SKILL.md
+    agentspec_draft: ~/.cursor/plugins/local/agentspec/agents/gifi/gifi-simulation-engineer.md
+    kb_domains: [ml-tabular, gifi-domain, python, testing]
+    tier: T2
+  gifi-acceptance-engineer:
+    path: .cursor/agents/gifi-acceptance-engineer.md
+    skill: .cursor/skills/gifi-acceptance-engineer/SKILL.md
+    agentspec_draft: ~/.cursor/plugins/local/agentspec/agents/gifi/gifi-acceptance-engineer.md
+    kb_domains: [gifi-domain, ml-tabular, testing, data-quality]
+    tier: T2
+  react-frontend-architect:
+    path: .cursor/agents/react-frontend-architect.md
+    skill: .cursor/skills/react-frontend-architect/SKILL.md
+    agentspec_draft: ~/.cursor/plugins/local/agentspec/agents/gifi/react-frontend-architect.md
+    kb_domains: [frontend-react, gifi-domain]
+    tier: T2
+routing_rule: .cursor/rules/gifi-agents.mdc
+
+domains:
+  gifi-domain:
+    name: GIFI Domain
+    description: Contratos normativos Camada 1 — camadas 1–5, faixas, Matrizes A/B/C, Modo A/B
+    path: gifi-domain/
+    confidence: 0.95
+    validated: "2026-07-09"
+    sources:
+      - docs/PRD_GIFI_v1.1.md
+      - docs/sketch/REFERENCIA_FAIXAS_OPERACIONAIS.md
+      - docs/sketch/DECISOES_GIFI.md
+      - docs/sketch/analytical-backbone.md
+      - docs/sketch/MAPA_COMPONENTES_GIFI.md
+    entry_points:
+      index: index.md
+      quick_reference: quick-reference.md
+    concepts:
+      - name: platform-layers
+        path: concepts/platform-layers.md
+      - name: target-and-framing
+        path: concepts/target-and-framing.md
+      - name: operational-bands
+        path: concepts/operational-bands.md
+      - name: acceptance-matrices
+        path: concepts/acceptance-matrices.md
+      - name: data-cleaning-rules
+        path: concepts/data-cleaning-rules.md
+      - name: mix-feature-layers
+        path: concepts/mix-feature-layers.md
+      - name: mode-a-b
+        path: concepts/mode-a-b.md
+      - name: closed-decisions
+        path: concepts/closed-decisions.md
+    patterns:
+      - name: mix-abc-features
+        path: patterns/mix-abc-features.md
+      - name: turno-dia-aggregation
+        path: patterns/turno-dia-aggregation.md
+      - name: champion-policy
+        path: patterns/champion-policy.md
+      - name: scenario-column-contract
+        path: patterns/scenario-column-contract.md
+      - name: volume-weighted-quality
+        path: patterns/volume-weighted-quality.md
+      - name: scenario-template-contract
+        path: patterns/scenario-template-contract.md
+      - name: adherence-report
+        path: patterns/adherence-report.md
+    specs:
+      - name: domain-rules
+        path: specs/domain-rules.yaml
+      - name: operational-ranges
+        path: specs/operational-ranges.yaml
+
+  ml-tabular:
+    name: ML Tabular
+    description: Cascata tabular supervisionada Elo1→2→3 — EN/RF, holdout, física
+    path: ml-tabular/
+    confidence: 0.95
+    validated: "2026-07-09"
+    sources:
+      - docs/PRD_GIFI_v1.1.md
+      - docs/sketch/analytical-backbone.md
+      - scikit-learn MCP (2026-07-09)
+    entry_points:
+      index: index.md
+      quick_reference: quick-reference.md
+    concepts:
+      - name: cascade-regression
+        path: concepts/cascade-regression.md
+      - name: elasticnet-vs-rf
+        path: concepts/elasticnet-vs-rf.md
+      - name: temporal-holdout
+        path: concepts/temporal-holdout.md
+      - name: stage-metrics
+        path: concepts/stage-metrics.md
+      - name: physics-constraints
+        path: concepts/physics-constraints.md
+    patterns:
+      - name: train-select-champion
+        path: patterns/train-select-champion.md
+      - name: report-intermediate-mae
+        path: patterns/report-intermediate-mae.md
+      - name: mode-a-b-inference
+        path: patterns/mode-a-b-inference.md
+      - name: artifact-packaging
+        path: patterns/artifact-packaging.md
+      - name: matriz-c-detractors
+        path: patterns/matriz-c-detractors.md
+      - name: inference-serving
+        path: patterns/inference-serving.md
+
+  frontend-react:
+    name: Frontend React
+    description: Camada 5 UI — React+Vite+TanStack+Zod patterns
+    path: frontend-react/
+    confidence: 0.90
+    validated: "2026-07-09"
+    sources:
+      - docs/PRD_GIFI_v1.1.md §5
+      - docs/sketch/analytical-backbone.md Camada 5
+      - React / TanStack Query / Zod MCP (2026-07-09)
+    entry_points:
+      index: index.md
+      quick_reference: quick-reference.md
+    concepts:
+      - name: stack-and-structure
+        path: concepts/stack-and-structure.md
+      - name: state-separation
+        path: concepts/state-separation.md
+      - name: no-business-in-ui
+        path: concepts/no-business-in-ui.md
+      - name: effect-discipline
+        path: concepts/effect-discipline.md
+    patterns:
+      - name: feature-folder
+        path: patterns/feature-folder.md
+      - name: container-presentational
+        path: patterns/container-presentational.md
+      - name: custom-hooks
+        path: patterns/custom-hooks.md
+      - name: service-layer
+        path: patterns/service-layer.md
+      - name: schema-validation
+        path: patterns/schema-validation.md
+      - name: provider-pattern
+        path: patterns/provider-pattern.md
+      - name: error-boundary
+        path: patterns/error-boundary.md
+      - name: state-separation
+        path: patterns/state-separation.md
+      - name: production-curves-chart
+        path: patterns/production-curves-chart.md
+
+  gifi-ingest:
+    name: GIFI Ingest
+    description: Padrões do Ingest Engine I1–I5 — sinais, remediação, artefatos
+    path: gifi-ingest/
+    confidence: 0.95
+    validated: "2026-07-09"
+    sources:
+      - docs/sketch/ingest-engine.md
+      - docs/kb/gifi-domain/
+    entry_points:
+      index: index.md
+      quick_reference: quick-reference.md
+    concepts:
+      - name: component-map
+        path: concepts/component-map.md
+      - name: signal-catalog
+        path: concepts/signal-catalog.md
+      - name: artifact-contract
+        path: concepts/artifact-contract.md
+      - name: feature-column-contract
+        path: concepts/feature-column-contract.md
+    patterns:
+      - name: dual-path-execution
+        path: patterns/dual-path-execution.md
+      - name: remediation-cycle
+        path: patterns/remediation-cycle.md
+      - name: warning-admissibility
+        path: patterns/warning-admissibility.md
+    specs:
+      - name: signal-catalog
+        path: specs/signal-catalog.yaml
+      - name: artifact-contract
+        path: specs/artifact-contract.yaml
+      - name: warning-matrix
+        path: specs/warning-matrix.yaml
+      - name: feature-columns
+        path: specs/feature-columns.yaml
+
+  spreadsheet-connectors:
+    name: Spreadsheet Connectors
+    description: Leitura Excel QM×Processo / TI / upload cenário (I1)
+    path: spreadsheet-connectors/
+    confidence: 0.85
+    validated: "2026-07-09"
+    sources:
+      - docs/sketch/ingest-engine.md
+      - docs/PRD_GIFI_v1.1.md
+      - docs/sketch/DECISOES_GIFI.md
+    entry_points:
+      index: index.md
+      quick_reference: quick-reference.md
+    concepts:
+      - name: source-modes
+        path: concepts/source-modes.md
+      - name: batch-identity
+        path: concepts/batch-identity.md
+    patterns:
+      - name: excel-qm-processo
+        path: patterns/excel-qm-processo.md
+      - name: ti-interpolated-fallback
+        path: patterns/ti-interpolated-fallback.md
+      - name: scenario-upload-parse
+        path: patterns/scenario-upload-parse.md
+    specs:
+      - name: batch-manifest-source
+        path: specs/batch-manifest-source.yaml

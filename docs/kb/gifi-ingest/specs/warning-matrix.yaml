@@ -1,0 +1,37 @@
+# Matriz de admissibilidade de warnings
+# Autor: Emerson Antônio
+# Data: 2026-07-09
+# Fonte: docs/sketch/ingest-engine.md §3.1
+
+version: "0.1.0"
+domain: gifi-ingest
+validated: "2026-07-09"
+
+default_unknown_warning: block
+
+contexts: [train, holdout, inference]
+
+matrix:
+  INGEST_PROXY_DB:
+    train: admit  # flag obrigatória
+    holdout:
+      admit_if:
+        max_proxy_row_ratio: 0.20
+      else: block
+    inference: admit
+
+  INGEST_SPARSE_LAB:
+    train: admit
+    holdout:
+      block_if: critical_target_or_feature_missing_in_window
+      else: admit
+    inference: admit_mode_a_estimated
+
+  INGEST_FILTER_INFO:
+    train: admit
+    holdout: admit
+    inference: not_applicable
+
+eligibility_rule: >
+  Artefato só é elegível à Matriz A/B/C se TODOS os warnings forem
+  Admitido no contexto de uso. Sem aceite ad hoc.

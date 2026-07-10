@@ -1,0 +1,38 @@
+# Metadados de origem do lote (I1 → manifesto)
+# Autor: Emerson Antônio
+# Data: 2026-07-09
+
+version: "0.1.0"
+domain: spreadsheet-connectors
+validated: "2026-07-09"
+
+source_kinds: [excel, ti_table, scenario_upload]
+modes: [historical, scenario]
+
+required_fields:
+  - batch_name
+  - source_hash
+  - source_kind
+  - source_uri
+  - mode
+  - ingested_at
+
+historical_additional:
+  - period_start
+  - period_end
+  - row_count_raw
+
+scenario_additional:
+  - template_id
+  - template_version
+  - ui_mode  # A | B
+  - cenario_id
+
+hash:
+  algorithm: sha256
+  scope: content_bytes  # never path-only
+
+fallback_policy:
+  prefer: ti_table
+  fallback: excel
+  missing_both_signal: INGEST_SOURCE_MISSING

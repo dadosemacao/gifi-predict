@@ -1,0 +1,77 @@
+# Faixas operacionais oficiais — GIFI
+# Autor: Emerson Antônio
+# Data: 2026-07-09
+# Fonte: docs/sketch/REFERENCIA_FAIXAS_OPERACIONAIS.md + PRD §3.5
+
+version: "0.1.0"
+unit_notes:
+  density: kg_per_m3
+  extrativo: percent
+  tpc: days
+  carga: percent_Na2O
+  volume: m3
+  tsa: TSA_per_day
+
+variables:
+  DB_LAB:
+    optima: [470, 510]
+    acceptable_low: [450, 470]
+    acceptable_high: [510, 520]
+    critical_outside: [450, 520]  # < low or > high
+    anchor_p50: 483
+
+  DB_SGF:
+    optima: [475, 505]
+    acceptable_low: [465, 475]
+    acceptable_high: [505, 515]
+    critical_outside: [465, 515]
+    anchor_p50: 490
+
+  Extrativo_AT:
+    optima: [1.5, 2.1]
+    acceptable: [2.1, 2.45]
+    critical_above: 2.45
+    anchor_p50: 1.89
+
+  TPC:
+    optima: [60, 90]
+    acceptable: [45, 60]
+    critical_below: 45  # madeira verde
+    anchor_p50: 65
+
+  Carga_Alcalina:
+    optima: [18.5, 20.5]
+    acceptable: [17.5, 21.0]
+    critical_outside: [17.5, 21.0]
+    anchor_p50: 19.66
+
+  Kappa:
+    optima: [16, 18]
+    acceptable: [15, 18.5]
+    critical_outside: [15, 18.5]
+    anchor_p50: 16.28
+
+  Pct_Casca:
+    optima_max: 1.0
+    acceptable: [1.0, 1.5]
+    critical_above: 1.5
+    anchor_p50: 0.80
+
+  VMI:
+    optima_min: 0.25
+    acceptable: [0.21, 0.25]
+    critical_max: 0.21
+    anchor_p50: 0.25
+
+  Volume_m3:
+    optima: [7500, 9500]
+    acceptable: [6000, 11000]
+    critical_below: 6000
+    anchor_p50: 8669
+
+  TSA:
+    optima: [3350, 3500]
+    acceptable: [3200, 3600]
+    critical_below_continuous: 3200
+    train_exclude_below: 1000
+    anchor_p50: 3450

@@ -1,0 +1,65 @@
+# GIFI Domain Rules — machine-readable
+# Autor: Emerson Antônio
+# Data: 2026-07-09
+# Fontes: PRD_GIFI_v1.1 §3; DECISOES_GIFI; ingest-engine
+
+version: "0.1.0"
+domain: gifi-domain
+validated: "2026-07-09"
+
+density:
+  unit: kg_per_m3
+  forbidden_units: [g_per_cm3]
+  schema_range:
+    min: 350
+    max: 650
+  impute:
+    formula: "DB_LAB = 0.985 * DB_SGF"
+    when: "DB_LAB is null and DB_SGF is not null"
+    origin_flag: proxy  # else lab
+    obsolete_factors: [0.88]
+
+training_filter:
+  column: Produção_Digestor
+  exclude_below: 1000
+  unit: TSA_per_day
+  signal_on_exclude: INGEST_FILTER_INFO
+
+mix:
+  columns: [pct_A, pct_B, pct_C, pct_D, pct_MG]
+  sum_target: 1.0
+  tolerance: 0.02
+
+holdout:
+  start: "2025-05-01"
+  end: "2025-10-30"
+  train_end: "2025-04-30"
+  decision_id: D-A
+  status: confirmed
+
+elo_1b_casca:
+  mvp: no_go
+  decision_id: D-B
+  status: confirmed
+  note: "Casca only as Elo3 feature when measured"
+
+aggregation_shift_to_day:
+  quality: volume_weighted_mean
+  volume: sum
+  tsa: daily_target_rule
+  decision_id: D-C
+  status: assumed_cd
+
+artifacts:
+  datasets: parquet
+  manifest: json
+  decision_id: D-D
+
+scenario_template:
+  id: template_cenario_v0
+  owner_layer: domain_L1
+  decision_id: D-E
+
+acceptance:
+  mae_holdout_max: 56
+  unit: TSA_per_day

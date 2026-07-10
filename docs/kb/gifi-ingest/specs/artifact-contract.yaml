@@ -1,0 +1,55 @@
+# Contrato operacional dos artefatos L2
+# Autor: Emerson Antônio
+# Data: 2026-07-09
+# Fonte: docs/sketch/ingest-engine.md §4.2
+
+version: "0.1.1"
+domain: gifi-ingest
+validated: "2026-07-09"
+
+formats:
+  datasets: parquet
+  manifest: json
+
+keys:
+  historical_pk: [data_processo, turno]
+  scenario_pk: [cenario_id, linha]
+  reference_timestamp: data_processo
+
+versioning:
+  schema_field: schema_version  # semver
+  dataset_field: dataset_version
+  source_field: source_hash
+  rules:
+    backward_compatible: bump_minor
+    breaking: bump_major_requires_L4_accept
+    new_column_without_major: forbidden
+
+column_contract: feature-columns.yaml  # lista fixa tipos/unidades
+
+flags:
+  db_origin: [lab, proxy]
+  extr_origin: [medido, estimado]
+
+artifacts:
+  - name: train_features
+    consumer: layer_3_motor
+  - name: holdout_features
+    consumer: layer_4_confidence
+    partition_rule: "2025-05-01 <= data_processo <= 2025-10-30"
+  - name: infer_features
+    consumer: layer_3_and_5
+  - name: batch_manifest
+    consumer: all
+    required_fields:
+      - schema_version
+      - dataset_version
+      - source_hash
+      - rules_applied
+      - row_counts
+      - exclusions
+      - warning_codes
+      - publish_status
+
+fallback:
+  on_fail: keep_last_published_ok

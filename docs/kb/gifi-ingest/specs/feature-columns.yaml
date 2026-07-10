@@ -1,0 +1,345 @@
+# Contrato de colunas — feature table L2 (lista fixa)
+# Autor: Emerson Antônio
+# Data: 2026-07-09
+# Fontes: lista de features (stakeholder/CD 2026-07-09); PRD §3; ingest-engine §4.2;
+#         docs/kb/gifi-domain/specs/operational-ranges.yaml
+#
+# Regra: coluna nova sem bump major de schema_version é PROIBIDA.
+# Nomes canônicos abaixo são a fonte da verdade no artefato publicado.
+
+version: "0.1.0"
+domain: gifi-ingest
+schema_version_seed: "1.0.0"
+validated: "2026-07-09"
+
+grain:
+  historical: [data_processo, turno]
+  daily_aggregate_note: "Agregação turno→dia (D-C): qualidade ponderada por volume; volume soma; TSA meta diária"
+  scenario: [cenario_id, linha]
+
+# ---------------------------------------------------------------------------
+# 1. Processo industrial (turno / média diária)
+# ---------------------------------------------------------------------------
+process:
+  - name: TSA_dia
+    aliases: [Produção_Digestor, producao_digestor, tsa_dia]
+    dtype: float64
+    unit: TSA_per_day
+    role: target
+    description: "Produção digestor — variável-alvo do modelo"
+    required_train: true
+    required_infer: false  # saída do Motor; não entrada de cenário
+    train_filter: "exclude rows where TSA_dia < 1000 (INGEST_FILTER_INFO)"
+
+  - name: Carga_Alcalina
+    aliases: [carga_alcalina, Carga]
+    dtype: float64
+    unit: percent_Na2O
+    role: feature_or_elo2_output
+    description: "Quantidade de reagentes químicos no cozimento"
+    required_train: false  # pode ser esparsa; Elo2 estima
+    mode_A: estimated_by_cascade
+    mode_B: injectable
+
+  - name: Kappa
+    aliases: [Numero_Kappa, kappa]
+    dtype: float64
+    unit: dimensionless
+    role: feature_process_fixed
+    description: "Teor de lignina residual na polpa"
+    required_train: false
+    required_scenario: true  # fixo/estimado pelo usuário no cenário
+    note: "Não gerado pela cascata florestal (PRD §3.6)"
+
+# ---------------------------------------------------------------------------
+# 2. Físico-químicas da madeira (Lab + SGF)
+# ---------------------------------------------------------------------------
+wood_quality:
+  - name: DB_SGF
+    aliases: [Densidade_basica_SGF, db_sgf]
+    dtype: float64
+    unit: kg_per_m3
+    role: feature
+    description: "Densidade básica medida/planejada pelo SGF"
+    required_train: true
+    required_scenario: true
+    schema_range: [350, 650]
+
+  - name: DB_LAB
+    aliases: [Densidade_basica_Lab, db_lab]
+    dtype: float64
+    unit: kg_per_m3
+    role: feature
+    description: "Densidade básica real medida no laboratório"
+    required_train: false  # imputável
+    impute: "0.985 * DB_SGF when null"
+    origin_flag_column: db_origin
+    schema_range: [350, 650]
+
+  - name: db_origin
+    dtype: string
+    unit: enum
+    role: provenance_flag
+    allowed: [lab, proxy]
+    description: "Origem de DB_LAB"
+    required_train: true
+    required_infer: true
+
+  - name: Secura_pct
+    aliases: ["% Secura cavacos", Secura, pct_secura]
+    dtype: float64
+    unit: percent
+    role: feature
+    description: "Teor de matéria seca / umidade dos cavacos"
+    required_train: false
+    sparse_ok: true
+
+  - name: Casca_pct
+    aliases: ["% Casca cavacos", "% Casca", Casca]
+    dtype: float64
+    unit: percent
+    role: feature_optional_mvp
+    description: "Proporção de casca nos cavacos"
+    required_train: false
+    elo_1b: no_go_mvp  # D-B — só feature Elo3 quando medida
+    sparse_ok: true
+
+  - name: Extrativo_Total
+    aliases: [Extrativo_total, extrativo_total]
+    dtype: float64
+    unit: percent
+    role: feature
+    description: "Teor total de compostos extrativos na madeira"
+    required_train: false
+    sparse_ok: true
+
+  - name: Extrativo_AT
+    aliases: [Extrativo_alcool_toluol, Extrativo_Álcool_Toluol, extrativo_at]
+    dtype: float64
+    unit: percent
+    role: feature_or_elo1_output
+    description: "Extrativos álcool-toluol — detrator crítico"
+    required_train: false
+    mode_A: estimated_by_elo1
+    mode_B: injectable
+    origin_flag_column: extr_origin
+
+  - name: extr_origin
+    dtype: string
+    unit: enum
+    role: provenance_flag
+    allowed: [medido, estimado]
+    description: "Origem de Extrativo_AT"
+    required_when_extrativo_present: true
+
+  - name: Extrativo_SGF
+    aliases: [extrativo_sgf]
+    dtype: float64
+    unit: percent
+    role: feature
+    description: "Estimativa de extrativos gerada pelo sistema florestal"
+    required_train: false
+    sparse_ok: true
+
+# ---------------------------------------------------------------------------
+# 3. Abastecimento, manejo e mix (média dos talhões)
+# ---------------------------------------------------------------------------
+supply_and_mix:
+  - name: TPC
+    aliases: [Tempo_Pos_Corte, tpc_dias]
+    dtype: float64
+    unit: days
+    role: feature
+    description: "Tempo pós-corte (armazenamento em pátio)"
+    required_train: true
+    required_scenario: true
+    management_band_note: "Gestão histórica citada 45–120 dias; crítica operacional TPC < 45 (verde)"
+
+  - name: Idade
+    aliases: [Idade_corte, idade]
+    dtype: float64
+    unit: years
+    role: feature
+    description: "Idade cronológica das árvores colhidas"
+    required_train: true
+    required_scenario: true
+
+  - name: VMI
+    aliases: [vmi]
+    dtype: float64
+    unit: m3
+    role: feature
+    description: "Volume médio individual (contínuo)"
+    required_train: true
+    required_scenario: false
+    bands:
+      critical: "VMI <= 0.21"
+      acceptable: "0.21 < VMI <= 0.25"
+      optima: "VMI > 0.25"
+
+  # Flags de faixa VMI (mutuamente exclusivas; derivadas de VMI)
+  - name: vmi_le_021
+    dtype: int8
+    unit: flag_0_1
+    role: derived_feature
+    description: "1 se VMI <= 0.21 (prejudicial / crítica)"
+    derive: "1 if VMI <= 0.21 else 0"
+
+  - name: vmi_021_025
+    dtype: int8
+    unit: flag_0_1
+    role: derived_feature
+    description: "1 se 0.21 < VMI <= 0.25 (operacional/estável)"
+    derive: "1 if 0.21 < VMI <= 0.25 else 0"
+
+  - name: vmi_gt_025
+    dtype: int8
+    unit: flag_0_1
+    role: derived_feature
+    description: "1 se VMI > 0.25 (ideal / ganho produtivo)"
+    derive: "1 if VMI > 0.25 else 0"
+
+  # Mix absoluto (Camada A) — obrigatório
+  - name: pct_A
+    dtype: float64
+    unit: fraction_0_1
+    role: feature
+    description: "Fração volume sítio A"
+  - name: pct_B
+    dtype: float64
+    unit: fraction_0_1
+    role: feature
+    description: "Fração volume sítio B"
+  - name: pct_C
+    dtype: float64
+    unit: fraction_0_1
+    role: feature
+    description: "Fração volume sítio C (seco / restritivo)"
+  - name: pct_D
+    dtype: float64
+    unit: fraction_0_1
+    role: feature
+    description: "Fração volume sítio D"
+  - name: pct_MG
+    dtype: float64
+    unit: fraction_0_1
+    role: feature
+    description: "Fração volume sítio MG"
+
+  mix_sum_rule:
+    columns: [pct_A, pct_B, pct_C, pct_D, pct_MG]
+    target: 1.0
+    tolerance: 0.02
+    fail_signal: INGEST_MIX_FAIL
+
+  # Compostos pedidos na lista de features (agrupamentos de negócio)
+  - name: pct_AB
+    dtype: float64
+    unit: fraction_0_1
+    role: derived_feature
+    description: "A + B — sítios úmidos / crescimento rápido"
+    derive: "pct_A + pct_B"
+
+  - name: pct_DMG
+    dtype: float64
+    unit: fraction_0_1
+    role: derived_feature
+    description: "D + MG — sítios secos/densos (menor rendimento histórico)"
+    derive: "pct_D + pct_MG"
+
+  # Compostos canônicos PRD Camada B (mantidos — TC-04 / Matriz B)
+  - name: pct_ABC
+    dtype: float64
+    unit: fraction_0_1
+    role: derived_feature
+    description: "A+B+C crescimento rápido (PRD Camada B)"
+    derive: "pct_A + pct_B + pct_C"
+
+  - name: pct_CDMG
+    dtype: float64
+    unit: fraction_0_1
+    role: derived_feature
+    description: "C+D+MG madeiras secas/densas (PRD Camada B)"
+    derive: "pct_C + pct_D + pct_MG"
+
+# ---------------------------------------------------------------------------
+# 4. Features derivadas obrigatórias do PRD (Camada C) — não na lista bruta,
+#    mas obrigatórias no artefato publicado (TC-08)
+# ---------------------------------------------------------------------------
+mix_diversity_prd:
+  - name: mix_entropy
+    dtype: float64
+    role: derived_feature
+    description: "Entropia de Shannon do mix"
+  - name: mix_hhi
+    dtype: float64
+    role: derived_feature
+    description: "Índice Herfindahl-Hirschman"
+  - name: dom_A
+    dtype: int8
+    role: derived_feature
+    derive: "1 if pct_A > 0.50 else 0"
+  - name: dom_B
+    dtype: int8
+    role: derived_feature
+    derive: "1 if pct_B > 0.50 else 0"
+  - name: dom_C
+    dtype: int8
+    role: derived_feature
+    derive: "1 if pct_C > 0.50 else 0"
+  - name: dom_D
+    dtype: int8
+    role: derived_feature
+    derive: "1 if pct_D > 0.50 else 0"
+  - name: dom_MG
+    dtype: int8
+    role: derived_feature
+    derive: "1 if pct_MG > 0.50 else 0"
+
+# ---------------------------------------------------------------------------
+# 5. Escala / chaves / metadados de artefato
+# ---------------------------------------------------------------------------
+keys_and_scale:
+  - name: data_processo
+    dtype: date
+    role: key
+  - name: turno
+    dtype: string
+    role: key
+  - name: Volume_m3
+    aliases: [Volume, volume_m3]
+    dtype: float64
+    unit: m3
+    role: feature_scale
+    description: "Volume abastecido — peso da ponderação e feature Elo3"
+    required_train: true
+    required_scenario: true
+
+artifact_meta_columns:
+  - schema_version
+  - dataset_version
+  - source_hash
+  - publish_status
+
+# ---------------------------------------------------------------------------
+# 6. Mapa rápido: rótulo de negócio → nome canônico
+# ---------------------------------------------------------------------------
+business_label_map:
+  "Produção digestor (tsa/dia)": TSA_dia
+  "Carga alcalina": Carga_Alcalina
+  "Kappa (ou Número Kappa)": Kappa
+  "Densidade básica SGF": DB_SGF
+  "Densidade básica Lab": DB_LAB
+  "% Secura cavacos": Secura_pct
+  "% Casca cavacos (ou % Casca)": Casca_pct
+  "Extrativo total": Extrativo_Total
+  "Extrativo álcool toluol": Extrativo_AT
+  "Extrativo SGF": Extrativo_SGF
+  "TPC (Tempo Pós-Corte)": TPC
+  "Idade (ou Idade de corte)": Idade
+  "VMI <= 0,21": vmi_le_021
+  "VMI 0,21 a 0,25": vmi_021_025
+  "VMI > 0,25": vmi_gt_025
+  "A + B": pct_AB
+  "C": pct_C
+  "D + MG": pct_DMG

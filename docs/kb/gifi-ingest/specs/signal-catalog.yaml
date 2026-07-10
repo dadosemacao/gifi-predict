@@ -1,0 +1,68 @@
+# Catálogo de sinais — Ingest ↔ Backbone
+# Autor: Emerson Antônio
+# Data: 2026-07-09
+# Fonte: docs/sketch/ingest-engine.md §4.3
+
+version: "0.1.0"
+domain: gifi-ingest
+validated: "2026-07-09"
+
+aggregate_statuses:
+  - ingest_ok
+  - ingest_warn
+  - ingest_fail
+
+publish_statuses:
+  - published_ok
+  - published_with_warnings
+  - quarantined
+  - failed
+
+signals:
+  - code: INGEST_SCHEMA_FAIL
+    severity: blocking
+    meaning: "Coluna/tipo/unidade inválidos"
+    backbone_effect: no_motor_trust_update
+
+  - code: INGEST_MIX_FAIL
+    severity: blocking
+    meaning: "Soma pct fora da tolerância"
+    backbone_effect: no_motor_trust_update
+
+  - code: INGEST_UNIT_FAIL
+    severity: blocking
+    meaning: "Densidade fora da escala kg/m3"
+    backbone_effect: no_motor_trust_update
+
+  - code: INGEST_SOURCE_MISSING
+    severity: blocking
+    meaning: "Fonte não chegou ou ilegível"
+    backbone_effect: no_publish
+
+  - code: INGEST_SCENARIO_REJECT
+    severity: blocking
+    meaning: "Upload fora do template A/B"
+    backbone_effect: ui_error_no_inference
+    path: online_scenario
+
+  - code: ACCEPT_DATA_REJECT
+    severity: blocking
+    produced_by: backbone_L4
+    consumed_by: ingest
+    meaning: "Confiança devolve lote"
+    backbone_effect: remediation_reprocess
+
+  - code: INGEST_PROXY_DB
+    severity: warning
+    meaning: "DB_LAB imputado 0.985 * DB_SGF"
+    backbone_effect: motor_uses_report_records
+
+  - code: INGEST_SPARSE_LAB
+    severity: warning
+    meaning: "Baixa cobertura Extrativo/Casca"
+    backbone_effect: alert_elo1_matriz_a
+
+  - code: INGEST_FILTER_INFO
+    severity: info
+    meaning: "Linhas removidas TSA < 1000"
+    backbone_effect: continue_count_in_manifest
