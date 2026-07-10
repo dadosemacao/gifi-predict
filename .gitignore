@@ -217,6 +217,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# macOS
-.DS_Store
+data/l2/
+data/l2_excel_validation/
+logs/ingest/
 **/.DS_Store

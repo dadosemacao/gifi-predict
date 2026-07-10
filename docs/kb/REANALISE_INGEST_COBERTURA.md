@@ -30,7 +30,7 @@ Os gaps restantes são **extensões atômicas** da KB `gifi-ingest` (lista de co
 | I2 Validação | `gifi-domain` + sinais ingest | `data-quality` (schema-validation, contracts), `data-contracts-engineer` (score 17) | Fechada |
 | I3 Transformação | `gifi-domain` mix/ponderação/0,985 | `python` | Fechada |
 | I4 Publicação | `artifact-contract.yaml` + `feature-columns.yaml` (2026-07-09) | `medallion` gates; training-data-pipelines | **Fechada** (lista de colunas publicada) |
-| I5 Logs/sinais | catálogo + remediação | `data-quality/observability`; `medallion/data-quality-gates` (quarentena); AWS Powertools logging (se cloud) | **Parcial** — schema de **evidência** e padrão de log estruturado MVP |
+| I5 Logs/sinais | catálogo + remediação | `data-quality/observability`; `medallion/data-quality-gates` (quarentena); AWS Powertools logging (se cloud) | **Fechada** (evidência + logging MVP) |
 | §3 Remediação | `remediation-cycle.md` | quarentena medallion | Fechada (evidência: P1) |
 | §3.1 Warnings | `warning-matrix.yaml` | — | Fechada |
 | §4 Interface Backbone | concepts + specs | ODCS via `data-contracts-engineer` | Fechada para execução |
@@ -66,8 +66,8 @@ Descartado criar KBs novas do tipo `gifi-observability`, `gifi-parquet`, `gifi-t
 | Artefato | Motivo (plano §) | Status |
 |----------|------------------|--------|
 | `specs/feature-columns.yaml` | §4.2 lista fixa | **Feito** (0.1.3) |
-| `specs/remediation-evidence.yaml` ou pattern | §3 passo 7 / I5 | Pendente P1 |
-| `patterns/structured-logging.md` (opcional) | I5 logging | Pendente P1 |
+| `specs/remediation-evidence.yaml` ou pattern | §3 passo 7 / I5 | **Feito** (0.2.4) |
+| `patterns/structured-logging.md` (opcional) | I5 logging | **Feito** (0.2.4) |
 
 Sem isso o build ainda parte; o risco é drift de schema feature e auditoria incompleta na remediação.
 

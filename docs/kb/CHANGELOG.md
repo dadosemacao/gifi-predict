@@ -1,7 +1,22 @@
 # CHANGELOG — docs/kb
 
 **Autor:** Emerson Antônio  
-**Data:** 2026-07-09
+**Data:** 2026-07-10
+
+## [0.2.4] — 2026-07-10
+
+### Added (Sprint P0+P1 — alinhamento Ingest)
+
+- `gifi-domain/specs/template_cenario_v0.yaml` — contrato publicado Camada 1 (bootstrap I1 cenário).
+- `gifi-ingest/specs/remediation-evidence.yaml` — esquema evidência ciclo remediação §3.
+- `gifi-ingest/patterns/structured-logging.md` — contrato mínimo I5 (JSON por evento).
+
+### Changed
+
+- `ingest-engine.md` v1.2 — P0: I1 template L1, I3 D-C fechada, §4.1 markdown, Elo 1b removido.
+- `analytical-backbone.md` v1.1 — template na Camada 1; Camada 5 = instância upload.
+- `domain-rules.yaml` — `scenario_template.spec` aponta para template v0.
+- `_index.yaml` v0.2.4 — novos specs/patterns indexados.
 
 ## [0.2.3] — 2026-07-09
 

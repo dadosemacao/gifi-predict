@@ -1,0 +1,2 @@
+cenario_id,linha,modo,Idade,TPC,Volume,DB_SGF,Kappa,pct_A,pct_B,pct_C,pct_D,pct_MG,Extrativo_AT
+C-AT10,1,B,8,60,1000,480,17,0.2,0.2,0.2,0.2,0.2,2.0

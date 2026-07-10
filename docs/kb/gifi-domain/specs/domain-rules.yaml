@@ -57,6 +57,7 @@ artifacts:
 
 scenario_template:
   id: template_cenario_v0
+  spec: specs/template_cenario_v0.yaml
   owner_layer: domain_L1
   decision_id: D-E
 

@@ -83,6 +83,7 @@ wood_quality:
     allowed: [lab, proxy]
     description: "Origem de DB_LAB"
     required_train: true
+    required_source: false
     required_infer: true
 
   - name: Secura_pct
@@ -226,13 +227,13 @@ supply_and_mix:
     role: feature
     description: "Fração volume sítio MG"
 
-  mix_sum_rule:
-    columns: [pct_A, pct_B, pct_C, pct_D, pct_MG]
-    target: 1.0
-    tolerance: 0.02
-    fail_signal: INGEST_MIX_FAIL
+mix_sum_rule:
+  columns: [pct_A, pct_B, pct_C, pct_D, pct_MG]
+  target: 1.0
+  tolerance: 0.02
+  fail_signal: INGEST_MIX_FAIL
 
-  # Compostos pedidos na lista de features (agrupamentos de negócio)
+supply_and_mix_derived:
   - name: pct_AB
     dtype: float64
     unit: fraction_0_1
@@ -325,11 +326,13 @@ artifact_meta_columns:
 # 6. Mapa rápido: rótulo de negócio → nome canônico
 # ---------------------------------------------------------------------------
 business_label_map:
+  "Data processo": data_processo
   "Produção digestor (tsa/dia)": TSA_dia
   "Carga alcalina": Carga_Alcalina
   "Kappa (ou Número Kappa)": Kappa
   "Densidade básica SGF": DB_SGF
   "Densidade básica Lab": DB_LAB
+  "Volume abastecido": Volume_m3
   "% Secura cavacos": Secura_pct
   "% Casca cavacos (ou % Casca)": Casca_pct
   "Extrativo total": Extrativo_Total
@@ -338,8 +341,15 @@ business_label_map:
   "TPC (Tempo Pós-Corte)": TPC
   "Idade (ou Idade de corte)": Idade
   "VMI <= 0,21": vmi_le_021
+  "VMI <=0,21": vmi_le_021
   "VMI 0,21 a 0,25": vmi_021_025
+  "VMI 0,21a0,25": vmi_021_025
   "VMI > 0,25": vmi_gt_025
-  "A + B": pct_AB
+  "VMI >0,25": vmi_gt_025
+  "A": pct_A
+  "B": pct_B
   "C": pct_C
+  "D": pct_D
+  "MG": pct_MG
+  "A + B": pct_AB
   "D + MG": pct_DMG

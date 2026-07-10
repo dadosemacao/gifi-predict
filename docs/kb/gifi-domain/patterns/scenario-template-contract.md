@@ -9,6 +9,7 @@
 - Bootstrap do conector I1 Cenário (antes da UI existir)
 - Validação online de upload (Modo A/B)
 - Versionamento `template_cenario_v0` (+ semver)
+- Especificação publicada: `docs/kb/gifi-domain/specs/template_cenario_v0.yaml`
 
 ## Implementation
 

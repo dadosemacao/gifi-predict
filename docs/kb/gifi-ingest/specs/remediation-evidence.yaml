@@ -1,0 +1,107 @@
+# Esquema de evidência de remediação — ciclo §3 passo 7 / I5
+# Autor: Emerson Antônio
+# Data: 2026-07-10
+# Fonte: docs/sketch/ingest-engine.md §3; patterns/remediation-cycle.md
+
+version: "0.1.0"
+domain: gifi-ingest
+validated: "2026-07-10"
+
+purpose: >
+  Registro auditável de cada ciclo de remediação no path histórico (batch).
+  Não se aplica ao path online de validação de cenário (§1.1).
+
+storage:
+  format: json
+  one_record_per: remediation_event
+  retention: indefinite
+
+required_fields:
+  - remediation_id
+  - detected_at
+  - resolved_at
+  - source_hash_before
+  - source_hash_after
+  - dataset_version_before
+  - dataset_version_after
+  - trigger_signal
+  - trigger_severity
+  - responsible
+  - reason
+  - action_taken
+  - publish_status_after
+
+optional_fields:
+  - sample_violations
+  - manifest_path_before
+  - manifest_path_after
+  - accept_data_reject_ref
+  - notes
+
+field_types:
+  remediation_id:
+    type: string
+    format: uuid
+  detected_at:
+    type: string
+    format: iso8601
+  resolved_at:
+    type: string
+    format: iso8601
+  source_hash_before:
+    type: string
+  source_hash_after:
+    type: string
+  dataset_version_before:
+    type: string
+  dataset_version_after:
+    type: string
+  trigger_signal:
+    type: string
+    enum_ref: signal-catalog.yaml
+  trigger_severity:
+    type: string
+    enum: [blocking, warning_escalated, accept_reject]
+  responsible:
+    type: string
+    description: "Pessoa ou papel (ex.: CD, TI Veracel)"
+  reason:
+    type: string
+    description: "Causa-raiz em linguagem operacional"
+  action_taken:
+    type: string
+    description: "Ex.: republicação TI, correção unidade, regra mix"
+  publish_status_after:
+    type: string
+    enum: [published_ok, published_with_warnings, quarantined, failed]
+  sample_violations:
+    type: array
+    max_items: 10
+    item_schema:
+      row_ref: string
+      column: string
+      value: string
+      rule: string
+
+rules:
+  - id: RE-01
+    rule: "Nunca sobrescrever last_published_ok sem publish_status_after = published_ok|published_with_warnings"
+  - id: RE-02
+    rule: "source_hash_after deve diferir de source_hash_before em reprocesso real"
+  - id: RE-03
+    rule: "ACCEPT_DATA_REJECT deve preencher accept_data_reject_ref quando aplicável"
+
+example:
+  remediation_id: "550e8400-e29b-41d4-a716-446655440000"
+  detected_at: "2026-07-10T14:00:00-03:00"
+  resolved_at: "2026-07-10T16:30:00-03:00"
+  source_hash_before: "sha256:abc..."
+  source_hash_after: "sha256:def..."
+  dataset_version_before: "2026-07-09T12:00:00Z"
+  dataset_version_after: "2026-07-10T16:30:00Z"
+  trigger_signal: INGEST_UNIT_FAIL
+  trigger_severity: blocking
+  responsible: "TI Veracel"
+  reason: "Coluna DB em g/cm3 na base republicada"
+  action_taken: "Republicação com unidade kg/m3"
+  publish_status_after: published_ok

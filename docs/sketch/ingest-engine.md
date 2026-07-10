@@ -1,8 +1,8 @@
 # Ingest Engine — Plano Macro do Sistema de Ingestão
 
 **Autor:** Emerson Antônio  
-**Data:** 2026-07-09  
-**Versão:** 1.1  
+**Data:** 2026-07-10  
+**Versão:** 1.2  
 **Escopo:** Sistema que materializa a Camada 2 da backbone (Dados e Representação)  
 **Brief:** `docs/PRD_GIFI_v1.1.md`  
 **Backbone:** `docs/sketch/analytical-backbone.md`
@@ -43,7 +43,7 @@ O sistema tem **dois modos operacionais de natureza diferente**, que não compar
 
 | Função | Detalhe |
 |---|---|
-| Ler fontes | Base QM×Processo; tabelas limpas/interpoladas da TI (quando houver); template de cenário (Superfície) |
+| Ler fontes | Base QM×Processo; tabelas limpas/interpoladas da TI (quando houver); instância de cenário (Camada 5); contrato `template_cenario_v0` (Camada 1) |
 | Identificar lote | Nome, hash, período coberto, timestamp de ingestão |
 | Classificar modo | **Histórico** (treino/validação) vs **Cenário** (inferência Modo A/B) |
 
@@ -61,9 +61,9 @@ O sistema tem **dois modos operacionais de natureza diferente**, que não compar
 |---|---|
 | Limpeza | Tipagem, nulos controlados, exclusão operacional |
 | Imputação DB | `DB_LAB = 0,985 × DB_SGF` quando Lab ausente; marcar origem (`lab` \| `proxy`) |
-| Features Mix A/B/C | `pct_*`, `pct_ABC`, `pct_CDMG`, entropy, HHI, `dom_X` |
+| Features Mix A/B/C | `pct_*`, `pct_AB`, `pct_DMG`, `pct_ABC`, `pct_CDMG`, entropy, HHI, `dom_X` |
 | Qualidade ponderada | Médias por volume (DB, Extrativo_AT, Casca) |
-| Agregação | Turno → dia (regra a fechar; ver pendências) |
+| Agregação | Turno → dia (D-C: qualidade ponderada por volume; volume soma; TSA meta diária) |
 
 ### I4 — Publicação de artefatos
 
@@ -136,10 +136,10 @@ Fluxo padrão quando a ingestão falha ou degrada:
 | **Camada 4** | Pedido de **reprocesso** (nova janela holdout / correção de agregação) | Novo lote versionado |
 | **Camada 5 — Superfície** | **Instância** da planilha de cenário (arquivo enviado pelo usuário) | Dado de entrada do modo Cenário |
 | **Camada 5** | Sinal de falha de parse/template | Feedback ao usuário (sem quarentena; validação online §1.1) |
-
-> **Correção (obj. 3 — quebra da circularidade):** o **template de cenário é um artefato da Camada 1 (Domínio)**, não da Camada 5. A UI apenas fornece a **instância** (arquivo preenchido). Assim, o Ingest valida contra um contrato que **já existe antes** da UI, e a construção do conector de cenário (I1 Cenário) não fica bloqueada pela existência da interface. Ordem de bootstrap: Domínio publica `template_cenario_v0` → Ingest valida → UI consome o mesmo contrato.
 | **Operação / TI** | Tabelas limpas ou Excel consolidado | Fonte modo Histórico |
 | **Operação** | Logs de falha de entrega de fonte | Atraso / retry de I1 |
+
+> **Correção (obj. 3 — quebra da circularidade):** o **template de cenário é um artefato da Camada 1 (Domínio)**, não da Camada 5. A UI apenas fornece a **instância** (arquivo preenchido). Assim, o Ingest valida contra um contrato que **já existe antes** da UI, e a construção do conector de cenário (I1 Cenário) não fica bloqueada pela existência da interface. Ordem de bootstrap: Domínio publica `template_cenario_v0` → Ingest valida → UI consome o mesmo contrato. Especificação: `docs/kb/gifi-domain/specs/template_cenario_v0.yaml`.
 
 ### 4.2 O que o Ingest **entrega** à Backbone
 
@@ -179,7 +179,7 @@ Nomes semânticos (`train_features`, etc.) **não bastam**. Todo artefato public
 | `INGEST_UNIT_FAIL` | Bloqueante | Densidade fora da escala kg/m³ | Idem |
 | `INGEST_FILTER_INFO` | Info | Linhas removidas TSA < 1.000 | Segue; conta no manifesto |
 | `INGEST_PROXY_DB` | Aviso | DB_LAB imputado (0,985×SGF) | Motor usa; relatório registra |
-| `INGEST_SPARSE_LAB` | Aviso | Baixa cobertura Extrativo/Casca | Elo 1/1b e Matriz A alertados |
+| `INGEST_SPARSE_LAB` | Aviso | Baixa cobertura Extrativo/Casca | Elo 1 e Matriz A alertados (Elo 1b fora do MVP) |
 | `INGEST_SOURCE_MISSING` | Bloqueante | Fonte não chegou / ilegível | Sem publicação |
 | `INGEST_SCENARIO_REJECT` | Bloqueante | Upload fora do template A/B | UI mostra erro; sem inferência |
 | `ACCEPT_DATA_REJECT` | Bloqueante* | Confiança devolve lote | Remediação + reprocesso |
@@ -287,7 +287,8 @@ Registro completo: `DECISOES_GIFI.md`.
 | `PRD_GIFI_v1.1.md` | Regras de dados e aceite |
 | `REFERENCIA_FAIXAS_OPERACIONAIS.md` | Limiares de validação |
 | `CASOS_TESTE_FUNCIONAIS_GIFI_v1.1.md` | TC de pipeline / features |
-| `docs/kb/` (`gifi-domain`, `gifi-ingest`, `spreadsheet-connectors`) | KB AgentSpec do Ingest (v0.1, 2026-07-09) |
+| `docs/kb/` (`gifi-domain`, `gifi-ingest`, `spreadsheet-connectors`) | KB AgentSpec do Ingest (v0.2.4, 2026-07-10) |
+| `docs/kb/gifi-domain/specs/template_cenario_v0.yaml` | Contrato de upload Modo A/B (bootstrap Camada 1) |
 | `docs/kb/REANALISE_INGEST_COBERTURA.md` | Gap analysis pós-KBs/agentes — **0 KBs/agentes novos**; só extensões P1 |
 | Este arquivo | Plano macro do sistema de ingestão |
 

@@ -3,8 +3,8 @@
 # Data: 2026-07-09
 # Escopo: KBs de domínio do repositório (não substitui AgentSpec global)
 
-version: "0.2.3"
-last_updated: "2026-07-09"
+version: "0.2.4"
+last_updated: "2026-07-10"
 location: docs/kb/
 owner: Emerson Antônio
 
@@ -109,6 +109,8 @@ domains:
         path: specs/domain-rules.yaml
       - name: operational-ranges
         path: specs/operational-ranges.yaml
+      - name: template-cenario-v0
+        path: specs/template_cenario_v0.yaml
 
   ml-tabular:
     name: ML Tabular
@@ -218,6 +220,8 @@ domains:
         path: patterns/remediation-cycle.md
       - name: warning-admissibility
         path: patterns/warning-admissibility.md
+      - name: structured-logging
+        path: patterns/structured-logging.md
     specs:
       - name: signal-catalog
         path: specs/signal-catalog.yaml
@@ -227,6 +231,8 @@ domains:
         path: specs/warning-matrix.yaml
       - name: feature-columns
         path: specs/feature-columns.yaml
+      - name: remediation-evidence
+        path: specs/remediation-evidence.yaml
 
   spreadsheet-connectors:
     name: Spreadsheet Connectors

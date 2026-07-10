@@ -1,0 +1,159 @@
+# Contrato do template de cenário — Camada 1 (Domínio)
+# Autor: Emerson Antônio
+# Data: 2026-07-10
+# Fontes: DECISOES D-E; ingest-engine §4.1 obj.3; PRD §4.1 Modo A/B;
+#         docs/kb/gifi-ingest/specs/feature-columns.yaml (grain scenario)
+#
+# Bootstrap: Domínio publica este contrato → Ingest I2 valida → UI envia instância.
+
+version: "0.1.0"
+domain: gifi-domain
+template_id: template_cenario_v0
+schema_version: "1.0.0"
+owner_layer: domain_L1
+validated: "2026-07-10"
+decision_id: D-E
+
+modes:
+  - id: A
+    label: Integração
+    description: Extrativo_AT e Carga_Alcalina estimados pela cascata — não injetar
+  - id: B
+    label: Isolamento
+    description: Permite injeção de Extrativo_AT, Carga_Alcalina e DB_LAB medido
+
+grain:
+  primary_key: [cenario_id, linha]
+
+file_formats:
+  - csv
+  - xlsx
+delimiter: ","
+decimal_separator: ","
+encoding: utf-8
+max_rows_online: 500
+sla_online_p95_seconds: 3
+
+columns:
+  - name: cenario_id
+    dtype: string
+    required: true
+    description: Identificador do cenário (upload)
+
+  - name: linha
+    dtype: int
+    required: true
+    description: Número da linha do cenário (1..N)
+
+  - name: modo
+    dtype: string
+    required: true
+    allowed: [A, B]
+    description: Modo de simulação da linha
+
+  - name: Idade
+    aliases: [idade, Idade_corte]
+    dtype: float64
+    unit: years
+    required: true
+
+  - name: TPC
+    aliases: [tpc_dias, Tempo_Pos_Corte]
+    dtype: float64
+    unit: days
+    required: true
+
+  - name: Volume
+    aliases: [volume_m3]
+    dtype: float64
+    unit: m3
+    required: true
+
+  - name: DB_SGF
+    aliases: [db_sgf, Densidade_basica_SGF]
+    dtype: float64
+    unit: kg_per_m3
+    required: true
+    range: [350, 650]
+
+  - name: Kappa
+    aliases: [kappa, Numero_Kappa]
+    dtype: float64
+    unit: dimensionless
+    required: true
+
+  - name: pct_A
+    dtype: float64
+    unit: fraction_0_1
+    required: true
+  - name: pct_B
+    dtype: float64
+    unit: fraction_0_1
+    required: true
+  - name: pct_C
+    dtype: float64
+    unit: fraction_0_1
+    required: true
+  - name: pct_D
+    dtype: float64
+    unit: fraction_0_1
+    required: true
+  - name: pct_MG
+    dtype: float64
+    unit: fraction_0_1
+    required: true
+
+  - name: Extrativo_AT
+    aliases: [extrativo_at]
+    dtype: float64
+    unit: percent
+    required: false
+    mode_A: forbidden_if_non_empty
+    mode_B: optional_inject
+
+  - name: Carga_Alcalina
+    aliases: [carga_alcalina, Carga]
+    dtype: float64
+    unit: percent_Na2O
+    required: false
+    mode_A: forbidden_if_non_empty
+    mode_B: optional_inject
+
+  - name: DB_LAB
+    aliases: [db_lab, Densidade_basica_Lab]
+    dtype: float64
+    unit: kg_per_m3
+    required: false
+    mode_A: optional
+    mode_B: optional_inject
+    range: [350, 650]
+
+mix_rules:
+  columns: [pct_A, pct_B, pct_C, pct_D, pct_MG]
+  target: 1.0
+  tolerance: 0.02
+  fail_signal: INGEST_MIX_FAIL
+
+mode_rules:
+  mode_A:
+    forbidden_non_empty:
+      - Extrativo_AT
+      - Carga_Alcalina
+    reject_signal: INGEST_SCENARIO_REJECT
+  mode_B:
+    allows_optional:
+      - Extrativo_AT
+      - Carga_Alcalina
+      - DB_LAB
+
+sitio_semantics: >
+  Não há coluna categórica Sitio no template v0. O perfil de sítio é expresso
+  pelo mix pct_A..pct_MG (alinhado a TC-A01 e feature-columns.yaml).
+
+example_header_csv: >
+  cenario_id,linha,modo,Idade,TPC,Volume,DB_SGF,Kappa,pct_A,pct_B,pct_C,pct_D,pct_MG
+
+consumers:
+  - ingest_I2_scenario_validation
+  - layer_5_ui_upload
+  - frontend_zod_schema

@@ -44,7 +44,7 @@
 |------|-----------------|
 | A | estimados (proibido injetar) |
 | B | injeção permitida |
-| Template | artefato Camada 1 (`template_cenario_v0`) |
+| Template | artefato Camada 1 — `specs/template_cenario_v0.yaml` |
 
 ## Pitfalls
 

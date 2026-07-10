@@ -1,8 +1,8 @@
 # Analytical Backbone — Plano Macro da Plataforma Determinística
 
 **Autor:** Emerson Antônio  
-**Data:** 2026-07-09  
-**Versão:** 1.0  
+**Data:** 2026-07-10  
+**Versão:** 1.1  
 **Escopo:** Camadas 1–5 (componentes de nível superior)  
 **Brief de requisitos:** `docs/PRD_GIFI_v1.1.md`  
 **Decomposição:** `docs/sketch/DECOMPOSICAO_COMPONENTES_GIFI.md`
@@ -27,6 +27,7 @@ Fora deste plano: Caminho da Volta, cloud em tempo real, RCA automática, retrei
 | Brief / PRD v1.1 | Escopo, alvo (TSA/dia), cascata, in/out |
 | Faixas operacionais | Unidades, limiares, fator DB 0,985 |
 | Protocolo de testes | Matrizes A/B/C e casos TC/TM |
+| Template de cenário v0 | Contrato versionado de upload Modo A/B (`template_cenario_v0`) |
 | Política de campeão | MAE + física + explicabilidade |
 
 **Depende de:** —  
@@ -110,7 +111,7 @@ Fora deste plano: Caminho da Volta, cloud em tempo real, RCA automática, retrei
 
 | Recurso | Função |
 |---|---|
-| Template de cenário | Contrato de colunas Modo A/B |
+| Upload de cenário | Instância da planilha preenchida (validada contra template Camada 1) |
 | Interface web | Upload → curvas TSA / Carga / Extrativos |
 | Painel de detratores | Consumo da Matriz C |
 | Relatório de aderência | Encerramento e gestão de desvios assistida |

@@ -19,7 +19,7 @@
 4. REMEDIAR   → fonte / regra / mapeamento (humano)
 5. REPROCESSAR → novo lote, novo hash/versão
 6. PUBLICAR   → só se I2+I3 ok
-7. REGISTRAR  → evidência antes/depois + motivo + responsável
+7. REGISTRAR  → evidência antes/depois + motivo + responsável (ver `specs/remediation-evidence.yaml`)
 ```
 
 Regra: last-good nunca é sobrescrita por lote em quarentena.
@@ -39,4 +39,5 @@ Fonte com unidade g/cm³ → `INGEST_UNIT_FAIL` → quarentena → TI republica 
 ## See Also
 
 - [../concepts/signal-catalog.md](../concepts/signal-catalog.md)
-- [warning-admissibility.md](warning-admissibility.md)
+- [../specs/remediation-evidence.yaml](../specs/remediation-evidence.yaml)
+- [structured-logging.md](structured-logging.md)
