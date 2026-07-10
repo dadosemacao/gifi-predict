@@ -7,7 +7,10 @@ import pandas as pd
 
 from simulation.cascade.inference import infer_dataframe
 from simulation.config import SimulationSettings
-from simulation.package.publisher import load_champion_pipes
+from simulation.package.publisher import (
+    load_candidate_pipes_by_run_id,
+    load_champion_pipes,
+)
 
 
 def run_infer_pipeline(
@@ -15,9 +18,15 @@ def run_infer_pipeline(
     *,
     cenario_id: str,
     mode: str,
+    run_id: str | None = None,
     output: Path | None = None,
 ) -> dict[str, Any]:
-    pipes, feature_cols, pointer = load_champion_pipes(settings.models_path)
+    if run_id:
+        pipes, feature_cols, pointer = load_candidate_pipes_by_run_id(
+            settings.models_path, run_id
+        )
+    else:
+        pipes, feature_cols, pointer = load_champion_pipes(settings.models_path)
 
     infer_path = (
         settings.l2_path / "scenarios" / cenario_id / "infer_features.parquet"

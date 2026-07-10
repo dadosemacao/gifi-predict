@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-import json
 from typing import Any
 
 from simulation.cascade.evaluator import evaluate_holdout
 from simulation.config import SimulationSettings
 from simulation.features.elo_specs import default_elo_specs
 from simulation.l2.loader import load_l2_bundle
-from simulation.package.publisher import load_champion_pipes, load_pipeline
+from simulation.package.publisher import (
+    load_candidate_pipes_by_run_id,
+    load_champion_pipes,
+)
 
 
 def run_evaluate_pipeline(
@@ -19,19 +21,10 @@ def run_evaluate_pipeline(
     specs = settings.elo_specs or default_elo_specs()
 
     if run_id:
-        candidate_dir = settings.models_path / "candidates" / run_id
-        manifest = json.loads(
-            (candidate_dir / "candidate_manifest.json").read_text(encoding="utf-8")
+        pipes, feature_cols, pointer = load_candidate_pipes_by_run_id(
+            settings.models_path, run_id
         )
-        champions = manifest["champions"]
-        feature_cols = manifest["feature_cols"]
-        pipes = {
-            elo: load_pipeline(
-                candidate_dir / f"{elo}_{family}.joblib",
-                settings.models_path,
-            )
-            for elo, family in champions.items()
-        }
+        champions = pointer["champions"]
     else:
         pipes, feature_cols, pointer = load_champion_pipes(settings.models_path)
         champions = pointer["champions"]

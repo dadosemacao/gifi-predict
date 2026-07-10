@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 from sklearn.pipeline import Pipeline
 
 
@@ -52,6 +53,36 @@ def build_candidate_manifest(
     }
 
 
+def _named_feature_dict(
+    values: np.ndarray,
+    cols: list[str],
+) -> dict[str, float] | None:
+    flat = np.asarray(values, dtype=float).ravel()
+    if flat.size == 0 or not cols:
+        return None
+    if flat.size != len(cols):
+        return None
+    return {col: float(val) for col, val in zip(cols, flat, strict=False)}
+
+
+def _extract_feature_importances(model: object, cols: list[str]) -> dict[str, float] | None:
+    importances: np.ndarray | None = None
+    get_importance = getattr(model, "get_feature_importance", None)
+    if callable(get_importance):
+        importances = np.asarray(get_importance(), dtype=float)
+    elif hasattr(model, "feature_importances_"):
+        importances = np.asarray(model.feature_importances_, dtype=float)
+    if importances is None:
+        return None
+    return _named_feature_dict(importances, cols)
+
+
+def _extract_coefficients(model: object, cols: list[str]) -> dict[str, float] | None:
+    if not hasattr(model, "coef_"):
+        return None
+    return _named_feature_dict(np.asarray(model.coef_, dtype=float), cols)
+
+
 def extract_explainability(
     pipes: dict[str, dict[str, Pipeline]],
     champions: dict[str, str],
@@ -63,15 +94,14 @@ def extract_explainability(
         model = pipe.named_steps.get("model")
         cols = feature_cols.get(elo, [])
         entry: dict[str, Any] = {"family": family, "elo": elo}
-        if family == "elasticnet" and hasattr(model, "coef_"):
-            entry["coefficients"] = {
-                col: float(coef)
-                for col, coef in zip(cols, model.coef_, strict=False)
-            }
-        elif family == "randomforest" and hasattr(model, "feature_importances_"):
-            entry["feature_importances"] = {
-                col: float(imp)
-                for col, imp in zip(cols, model.feature_importances_, strict=False)
-            }
+
+        coefficients = _extract_coefficients(model, cols)
+        if coefficients is not None:
+            entry["coefficients"] = coefficients
+        else:
+            importances = _extract_feature_importances(model, cols)
+            if importances is not None:
+                entry["feature_importances"] = importances
+
         out[elo] = entry
     return out

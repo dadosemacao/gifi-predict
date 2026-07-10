@@ -39,6 +39,11 @@ def evaluate(
 def infer(
     cenario_id: str = typer.Option(..., "--cenario-id"),
     mode: str = typer.Option("A", "--mode", help="A or B"),
+    run_id: str | None = typer.Option(
+        None,
+        "--run-id",
+        help="Candidate run_id (required when release_ok=false / no current_candidate)",
+    ),
     output: Path | None = typer.Option(None, "--output"),
 ) -> None:
     settings = SimulationSettings.from_yaml()
@@ -46,6 +51,7 @@ def infer(
         settings,
         cenario_id=cenario_id,
         mode=mode,
+        run_id=run_id,
         output=output,
     )
     typer.echo(result)

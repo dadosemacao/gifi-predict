@@ -110,6 +110,39 @@ def load_current_candidate(models_root: Path) -> dict[str, Any]:
     return json.loads(pointer_path.read_text(encoding="utf-8"))
 
 
+def load_candidate_pipes_by_run_id(
+    models_root: Path,
+    run_id: str,
+) -> tuple[dict[str, Pipeline], dict[str, list[str]], dict[str, Any]]:
+    candidate_dir = models_root / "candidates" / run_id
+    if not candidate_dir.is_dir():
+        raise FileNotFoundError(f"candidate run not found: {run_id}")
+
+    manifest_path = candidate_dir / "candidate_manifest.json"
+    if not manifest_path.exists():
+        raise FileNotFoundError(
+            f"candidate_manifest.json not found for run_id={run_id}"
+        )
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    champions = manifest["champions"]
+    feature_cols = manifest.get("feature_cols", {})
+    pipes = {
+        elo: load_pipeline(candidate_dir / f"{elo}_{family}.joblib", models_root)
+        for elo, family in champions.items()
+    }
+    pointer = {
+        "run_id": run_id,
+        "candidate_dir": str(candidate_dir),
+        "champions": champions,
+        "artifacts": {
+            elo: str(candidate_dir / f"{elo}_{family}.joblib")
+            for elo, family in champions.items()
+        },
+    }
+    return pipes, feature_cols, pointer
+
+
 def load_champion_pipes(
     models_root: Path,
     pointer: dict[str, Any] | None = None,
