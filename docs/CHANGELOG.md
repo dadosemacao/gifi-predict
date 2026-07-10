@@ -4,6 +4,42 @@
 
 ---
 
+## [0.3.0] — 2026-07-10
+
+### Adicionado
+
+- **Gate de Aceite (Camada 4):** pacote `src/acceptance/` — Matrizes A∧B∧C, política `release_ok` / `demo_mode`, promoção de campeão.
+- CLI `accept` (`run --run-id`, `report --run-id`).
+- Configuração `config/acceptance.yaml` e cenários versionados em `config/acceptance_scenarios/` (anchor, TC-03/05, TM-01…05, TC-09/10).
+- Relatórios em `reports/acceptance/{run_id}/acceptance_report.json`.
+- Campeão produtivo em `models/champion/{run_id}/` + `current_champion.json` (somente quando `release_ok=true`).
+- Testes `tests/acceptance/` (14 casos, incluindo smoke Excel L2 `@slow`).
+- Dependência `shap>=0.44` (Matriz C — top-3 detratores).
+- **SDD:** Camada 4 arquivada em `.claude/sdd/archive/ACCEPTANCE_GATE/`.
+
+### Adicionado (Camada 3 — pós-ship)
+
+- **`simulate infer --run-id`** e **`simulate evaluate --run-id`** — carregam candidato L3 sem depender de `current_candidate.json`.
+- **Explainability no manifesto L3:** coeficientes (ElasticNet/Ridge/Lasso) e `feature_importances` (RF, ExtraTrees, XGB, LGBM, CatBoost) via `extract_explainability`.
+- Testes `tests/simulation/test_infer_pipeline.py`, `tests/simulation/test_explainability.py`.
+
+### Validado (Excel L2)
+
+- Smoke `accept run --run-id <candidato OOF>`:
+  - `matriz_a=false` (MAE ~94–97 > 56)
+  - `matriz_b=false` (MVP TC-03/05 + TM)
+  - `matriz_c=true`
+  - `release_ok=false`, `demo_mode=true`
+- Suite pytest (`-m "not slow"`): **50 passed** (ingest + simulation + acceptance).
+
+### Débito conhecido
+
+- Gate completo **A∧B∧C verde** depende de iteração L2/L3 (MAE ≤ 56).
+- Matriz B MVP cobre TC-03/05 + TM-01…05; TC-01…02, TC-04, TC-06…08 ficam para Marco 2.
+- AT-011 (p95 infer < 5s) não automatizado.
+
+---
+
 ## [0.2.3] — 2026-07-10
 
 ### Documentação
@@ -31,6 +67,7 @@
 
 ---
 
+## [0.2.2] — 2026-07-10
 
 ### Adicionado (modelagem Elo 3)
 
@@ -48,14 +85,11 @@
 
 ---
 
+## [0.2.1] — 2026-07-10
 
 ### Adicionado
 
 - **SDD:** Camada 3 arquivada em `.claude/sdd/archive/SIMULATION_ENGINE/`.
-- **SDD:** DEFINE Camada 4 em `.claude/sdd/features/DEFINE_ACCEPTANCE_GATE.md`.
-
-### Adicionado (dev environment)
-
 - **Dev environment:** `scripts/setup_dev.sh`, `.python-version` (3.12), `uv.lock`, `requirements.txt`, `requirements-dev.txt`.
 - **Toolchain:** `ruff` + `pytest-cov` em `[project.optional-dependencies].dev`.
 - **Documentação:**

@@ -1,8 +1,8 @@
 # Mapa de Componentes e Dependências — Projeto GIFI
 
 **Autor:** Emerson Antônio  
-**Data:** 2026-07-09  
-**Versão:** 1.0  
+**Data:** 2026-07-10  
+**Versão:** 1.1  
 **Base normativa:** `PRD_GIFI_v1.1.md`, `RESUMO_TECNICO_GIFI_v1.1.md`, `CASOS_TESTE_FUNCIONAIS_GIFI_v1.1.md`, `sketch/REFERENCIA_FAIXAS_OPERACIONAIS.md`  
 **Objetivo:** visão única para decompor o sistema em tarefas de construção.
 
@@ -16,6 +16,8 @@ O GIFI é um **simulador preditivo em cascata** (Caminho da Ida): dados de plane
 
 ## 2. Mapa de camadas
 
+### 2.1 Visão de produto (componentes C0–C9)
+
 ```
 L0  Fundação documental + base bruta
 L1  Dados limpos + engenharia de features
@@ -25,6 +27,20 @@ L4  Produto (interface + relatório de desvios)
 ```
 
 Diagrama: `graphics/mapa_componentes_gifi.png`
+
+### 2.2 Mapeamento para backbone + código (2026-07-10)
+
+| Backbone | Pacote / CLI | Componentes C* | Status |
+|----------|--------------|----------------|--------|
+| Camada 1 — Domínio | `docs/kb/gifi-domain/` | C0 | **Pronto** |
+| Camada 2 — Ingest | `src/ingest/` · `ingest` | C1 + C2 | **Shipped** |
+| Camada 3 — Simulação | `src/simulation/` · `simulate` | C3 + C4 + C5 | **Shipped** |
+| Camada 4 — Aceite | `src/acceptance/` · `accept` | C6 (+ C7 parcial) | **Shipped (MVP)** |
+| Camada 5 — UI | (a construir) | C8 | **Pendente** |
+| Marco 4 | (a construir) | C9 | **Pendente** |
+| Fora MVP | — | C3b, NN | **NO-GO / opcional** |
+
+Referências SDD arquivadas: `.claude/sdd/archive/{INGEST_ENGINE,SIMULATION_ENGINE,ACCEPTANCE_GATE}/`
 
 ---
 
@@ -49,10 +65,12 @@ Diagrama: `graphics/mapa_componentes_gifi.png`
 | **O que é** | Pipeline que lê a base QM×Processo, tipa colunas, aplica filtros e imputações |
 | **Regras-chave** | Unidade kg/m³; filtro TSA < 1.000; `DB_LAB = 0,985 × DB_SGF` se Lab ausente; soma mix ≈ 1,0 |
 | **Entradas** | Excel consolidado 2018–2025 (+ tabelas limpas da TI, quando disponíveis) |
-| **Saídas** | Dataset de treino/validação versionado (turno → dia) |
+| **Saídas** | Parquet L2 versionado (`data/l2/`), manifesto, pointer `current.json` |
+| **Implementação** | `src/ingest/` — I1 conectores, I2 validação, I3 transformação, I4 publicação, I5 sinais |
+| **CLI** | `ingest batch`, `scenario-validate`, `scenario-publish`, `reprocess` |
 | **Depende de** | C0 (faixas/schema) |
-| **Bloqueia** | C2, C3…C6 |
-| **Status** | **Pendente** — base bruta existe; pipeline ainda não construído |
+| **Bloqueia** | C2…C6 |
+| **Status** | **Concluído (Camada 2)** — shipped 2026-07-10; débito Marco 2: AT-011/012/017 E2E dedicados |
 
 ---
 
@@ -62,10 +80,11 @@ Diagrama: `graphics/mapa_componentes_gifi.png`
 |---|---|
 | **O que é** | Camada analítica: percentuais, compostos, diversidade, médias ponderadas |
 | **Features** | `pct_*`, `pct_ABC`, `pct_CDMG`, `mix_entropy`, `mix_hhi`, `dom_X`, DB/Extrativos/Casca ponderados, VMI, TPC, Volume, Kappa |
+| **Implementação** | Integrado ao Ingest I3 (`feature-columns.yaml`, agregação turno→dia D-C) |
 | **Depende de** | C1 |
 | **Bloqueia** | C3, C4, C5, C6 |
-| **Testes associados** | TC-08, TC-P01, TC-A02 |
-| **Status** | **Pendente** |
+| **Testes associados** | TC-08, TC-P01, TC-A02 (parcialmente cobertos em `tests/ingest/`) |
+| **Status** | **Concluído (integrado ao Ingest)** — qualidade de dados documentada em `docs/analysis/RELATORIO_DADOS_ENGENHARIA_VARIAVEIS.md` |
 
 ---
 
@@ -75,11 +94,12 @@ Diagrama: `graphics/mapa_componentes_gifi.png`
 |---|---|
 | **O que é** | Modelo que estima Extrativo_AT a partir de Sítio + Idade (+ mix) |
 | **Saída** | `Extrativo_AT` estimado |
+| **Implementação** | `src/simulation/models/` + cascata Modo A/B |
 | **Depende de** | C2 |
 | **Bloqueia** | C5 (Elo 2), parcialmente C6 |
 | **Métrica** | `MAE_Extrativos` (reportar; não bloqueia sozinho o aceite global) |
 | **Risco** | Cobertura Lab forte só a partir de ~2024 |
-| **Status** | **Pendente** |
+| **Status** | **Concluído (Camada 3)** — MAE reportado no holdout; gate global ainda falha |
 
 ---
 
@@ -90,8 +110,8 @@ Diagrama: `graphics/mapa_componentes_gifi.png`
 | **O que é** | Modelo auxiliar Sítio + Idade → % Casca |
 | **Depende de** | C2 |
 | **Bloqueia** | Explicabilidade com casca; não bloqueia MVP mínimo do Elo 3 se Casca medida existir |
-| **Decisão** | Incluir se viável; senão Casca só como feature quando disponível |
-| **Status** | **Pendente / escopo opcional** |
+| **Decisão** | **NO-GO no MVP** (D-B confirmada 2026-07-09); Casca só como feature quando medida |
+| **Status** | **Fora do escopo MVP** — go/no-go pós-31/08 |
 
 ---
 
@@ -100,10 +120,11 @@ Diagrama: `graphics/mapa_componentes_gifi.png`
 | Item | Conteúdo |
 |---|---|
 | **O que é** | Modelo Extrativo_AT + TPC + DB_SGF → Carga Alcalina |
+| **Implementação** | `src/simulation/` — estágio elo2 da cascata |
 | **Depende de** | C2 + C3 (no Modo A); no Modo B aceita Extrativo injetado |
 | **Bloqueia** | C5 (Elo 3 no Modo A) |
 | **Métrica** | `MAE_Carga` |
-| **Status** | **Pendente** |
+| **Status** | **Concluído (Camada 3)** |
 
 ---
 
@@ -112,11 +133,12 @@ Diagrama: `graphics/mapa_componentes_gifi.png`
 | Item | Conteúdo |
 |---|---|
 | **O que é** | Modelo final de produção: mix + qualidade + processo → TSA/dia |
-| **Algoritmos** | Baseline → ElasticNet → Random Forest (NN opcional depois) |
-| **Depende de** | C2 + C4 (+ C3/C3b no Modo A) |
+| **Algoritmos** | Baseline → ElasticNet → RF (+ XGB/LGBM/CatBoost, OOF stack) |
+| **Implementação** | `src/simulation/` — treino, evaluate, infer; candidatos em `models/candidates/{run_id}/` |
+| **Depende de** | C2 + C4 (+ C3 no Modo A) |
 | **Bloqueia** | C6, C7, C8 |
 | **KPI** | `MAE_TSA ≤ 56` + monotonicidade física |
-| **Status** | **Pendente** |
+| **Status** | **Concluído (engenharia)** — melhor holdout ~94–97 (`release_ok=false`); ver `docs/analysis/DIAGNOSTICO_MAE_ELO3.md` |
 
 ---
 
@@ -126,11 +148,12 @@ Diagrama: `graphics/mapa_componentes_gifi.png`
 |---|---|
 | **O que é** | Protocolo de aceite e escolha do modelo campeão |
 | **Matriz A** | Holdout temporal; MAE ≤ 56 |
-| **Matriz B** | TC-01…08 + TM-01…05 (física) |
+| **Matriz B** | TC-01…08 + TM-01…05 (física) — **MVP:** TC-03/05 + TM-01…05 |
 | **Matriz C** | TC-09/10 (top-3 detratores) |
-| **Depende de** | C3, C4, C5 (+ artefatos de explicabilidade) |
-| **Bloqueia** | Release da interface e relatório final |
-| **Status** | **Especificado; execução pendente** |
+| **Implementação** | `src/acceptance/` — `accept run|report`; relatório em `reports/acceptance/{run_id}/` |
+| **Depende de** | C3, C4, C5 (+ artefatos de explicabilidade L3) |
+| **Bloqueia** | Release produtivo da interface (bind campeão) |
+| **Status** | **Concluído (MVP Camada 4)** — gate A∧B∧C verde pendente de modelagem; `demo_mode=true` no Excel atual |
 
 ---
 
@@ -139,10 +162,11 @@ Diagrama: `graphics/mapa_componentes_gifi.png`
 | Item | Conteúdo |
 |---|---|
 | **O que é** | Decomposição de impacto (SHAP/importância) → top-3 detratores |
-| **Depende de** | C5 (modelo campeão) |
-| **Bloqueia** | Matriz C e painel da UI |
+| **Implementação parcial** | L3: `extract_explainability` no manifesto; L4: Matriz C (SHAP/coef/permutation) |
+| **Depende de** | C5 (modelo campeão/candidato) |
+| **Bloqueia** | Matriz C completa na homologação; painel da UI |
 | **Fora** | RCA automática |
-| **Status** | **Pendente** |
+| **Status** | **Parcial** — motor pronto; UI e relatório Marco 4 pendentes |
 
 ---
 
@@ -151,10 +175,11 @@ Diagrama: `graphics/mapa_componentes_gifi.png`
 | Item | Conteúdo |
 |---|---|
 | **O que é** | Upload de planilha → execução Modo A/B → curvas TSA + Carga + Extrativos + top-3 |
-| **Depende de** | C5 + C6 (mínimo funcional) + C7 (para homologação completa) |
+| **Depende de** | C5 + C6 (mínimo funcional demo) + C7 (homologação completa) |
+| **Integração prevista** | `acceptance_report.json` (`demo_mode`), inferência L3 (`--run-id`), cenários L2 |
 | **Prazo** | Homologável até **31/08/2026** |
 | **Fora** | Retreino na UI, cloud, Caminho da Volta |
-| **Status** | **Pendente** |
+| **Status** | **Pendente — próximo pacote (Camada 5)** |
 
 ---
 
@@ -174,42 +199,39 @@ Diagrama: `graphics/mapa_componentes_gifi.png`
 ```
 C0 Docs ──┐
           ├──► C1 Limpeza ──► C2 Features ──┬──► C3 Elo1 ──► C4 Elo2 ──┐
-C_raw ────┘                                 ├──► C3b Elo1b (opc.) ────┼──► C5 Elo3
+C_raw ────┘         [L2 ingest]            ├──► C3b (NO-GO MVP) ───────┼──► C5 Elo3 [L3 simulate]
                                             └─────────────────────────┘
                                                       │
                                                       ▼
-                                              C6 Validação A/B/C
+                                              C6 Validação A/B/C [L4 accept]
                                                       │
                                     ┌─────────────────┼─────────────────┐
                                     ▼                 ▼                 ▼
-                                 C7 Explain        C8 UI             (release)
+                                 C7 Explain        C8 UI [L5]        (release)
                                     └────────┬────────┘
                                              ▼
                                           C9 Relatório
 ```
 
-**Regra:** não iniciar C5 sem C2 estável; não homologar C8 sem Matriz B mínima; não encerrar sem C6+C7+C9.
+**Regra:** não homologar C8 produtivo sem `release_ok=true`; modo demo permitido com `demo_mode=true`.
 
 ---
 
 ## 5. Ordem de construção recomendada
 
-| Ordem | Componente | Marco sugerido | Critério para avançar |
+| Ordem | Componente | Marco | Status (2026-07-10) |
 |---|---|---|---|
-| **1** | C0 Docs | Feito | v1.1 publicada |
-| **2** | C1 Limpeza + schema | Marco 1 | Dataset versionado; TC-P01 / TC-A02 verdes |
-| **3** | C2 Features Mix A/B/C | Marco 1 | TC-08 verde; soma mix = 1 |
-| **4** | Baseline Elo 3 (sem cascata completa) | Marco 1 | Baseline MAE documentado |
-| **5** | C3 Elo 1 | Marco 2 | `MAE_Extrativos` reportado |
-| **6** | C4 Elo 2 | Marco 2 | `MAE_Carga` reportado |
-| **7** | C5 Elo 3 (ElasticNet + RF) | Marco 2 | Candidatos prontos para Matriz A |
-| **8** | C6 Matriz A + B (parcial) | Marco 2 | MAE ≤ 56 **ou** plano de gap; TC físicos críticos Pass |
-| **9** | C8 UI mínima (upload + TSA) | Marco 2 (31/08) | Simulação Modo A funcional |
-| **10** | C7 Explicabilidade | Marco 2–3 | Top-3 por cenário |
-| **11** | C6 Matriz C + B completa | Marco 3 | TC-09/10 + TM-01…05 |
-| **12** | C3b Casca (se viável) | Marco 3 | Decisão go/no-go |
-| **13** | NN opcional | Marco 3 | Só se vencer A+B+C |
-| **14** | C9 Relatório final | Marco 4 | Encerramento |
+| **1** | C0 Docs | Marco 1 | ✅ Feito |
+| **2** | C1 Limpeza + schema | Marco 1 | ✅ Shipped (`ingest`) |
+| **3** | C2 Features Mix A/B/C | Marco 1 | ✅ Integrado I3 |
+| **4** | C3 + C4 + C5 Cascata | Marco 2 | ✅ Shipped (`simulate`) |
+| **5** | C6 Matrizes A/B/C | Marco 2 | ✅ Shipped MVP (`accept`) |
+| **6** | C8 UI mínima (upload + TSA) | Marco 2 (31/08) | ⏭️ Próximo |
+| **7** | C7 UI + relatório detratores | Marco 2–3 | 🔶 Parcial (L3+L4) |
+| **8** | Gate A∧B∧C verde | Marco 2–3 | ⚠️ MAE > 56; iterar L2/L3 |
+| **9** | C6 Matriz B completa (TC-01…08) | Marco 3 | ⚠️ Débito Marco 2 |
+| **10** | C3b Casca / NN | Marco 3+ | Fora MVP |
+| **11** | C9 Relatório final | Marco 4 | Pendente |
 
 ---
 
@@ -217,54 +239,70 @@ C_raw ────┘                                 ├──► C3b Elo1b (op
 
 | Dependência | Dono | Impacto se atrasar |
 |---|---|---|
-| Tabelas analíticas limpas / interpoladas (TI) | TI Veracel/Keyrus | Atrasa C1; PRD prevê ganho de ~22 dias se entregue |
+| Tabelas analíticas limpas / interpoladas (TI) | TI Veracel/Keyrus | Qualidade L2; PRD prevê ganho de ~22 dias se entregue |
 | Validação de faixas com processo (se reabrir 0,88) | Stakeholder / Processo | Baixo — valores já otimizados pelos dados |
-| Template oficial de planilha de cenário | CD + negócio | Bloqueia C8 e homologação |
-| Definição do holdout temporal exato (2025 vs “2026”) | CD + stakeholder | Afeta Matriz A |
+| Template oficial de planilha de cenário | CD + negócio | Publicado em `template_cenario_v0` (Camada 1); UI ainda consome |
+| Definição do holdout temporal | CD + stakeholder | **Fechado:** treino até 2025-04; holdout 2025-05→10 (`config/simulation.yaml`) |
 
 ---
 
 ## 7. Pontos ainda pendentes
 
-### Bloqueantes para começar a construir
+### Bloqueantes para homologação produtiva (não para demo)
 
-1. **Pipeline C1/C2 inexistente** — há Excel de referência, não há código/dataset versionado no repositório.
-2. **Protocolo de holdout temporal** — PRD cita 2026; base vai até out/2025. Precisa fechar a janela de teste (ex.: últimos N meses de 2025) antes da Matriz A.
-3. **Template de planilha de cenário** — contrato de colunas Modo A vs Modo B ainda não materializado em arquivo.
+1. **MAE ≤ 56** — holdout ~94–97; roadmap em `docs/analysis/DIAGNOSTICO_MAE_ELO3.md`.
+2. **Matriz B completa** — MVP cobre TC-03/05 + TM; expandir TC-01…02, TC-04, TC-06…08.
+3. **C8 Interface web** — upload, curvas, badge `demo_mode`, integração `--run-id`.
 
-### Decisões de escopo em aberto (não bloqueiam o início)
+### Qualidade de dados (impacta modelagem, não o backbone)
 
-4. **Elo 1b (% Casca)** — go/no-go após C2; MVP pode seguir com Casca só quando medida.
-5. **Redes Neurais** — explícito como opcional; não entra no caminho crítico.
-6. **Agregação turno→dia** — regra de agregação (média, soma, turno representativo) precisa ser fixada em C1.
+4. **Issues L2 documentados** — `docs/analysis/RELATORIO_DADOS_ENGENHARIA_VARIAVEIS.md` (proxy DB, cobertura Extrativo, etc.).
+5. **Entrega TI da base interpolada** — melhora cobertura; ingest já opera com Excel consolidado.
+
+### Débitos técnicos Marco 2
+
+6. **AT-011** — benchmark p95 infer < 5s (L3).
+7. **AT-011/012/017 E2E dedicados** — ingest (parcialmente cobertos).
+8. **MLflow / lock distribuído** — ADR-003; filesystem no MVP.
+
+### Decisões de escopo fechadas (não pendência)
+
+- **Elo 1b (% Casca):** NO-GO MVP (D-B).
+- **Redes Neurais:** opcional pós-gate.
+- **Caminho da Volta, cloud, RCA, retreino UI:** fora do MVP.
 
 ### Riscos técnicos a monitorar
 
-7. **Erro composto da cascata** — maior ameaça ao MAE 56; exige MAE por elo desde C3/C4.
-8. **Cobertura de Extrativo_AT** — esparsa antes de 2024; Elo 1 pode ser frágil fora desse período.
-9. **Sítios D/MG** — poucos casos de dominância; testes serão majoritariamente sintéticos.
-10. **Entrega TI da base interpolada** — se não vier, C1 consome esforço extra de preparação.
-
-### Explicitamente fora do MVP (não pendência de construção)
-
-- Caminho da Volta  
-- Integração Databricks/Azure em tempo real  
-- RCA automática  
-- Retreino/feedback na UI  
+9. **Erro composto da cascata** — maior ameaça ao MAE 56; MAE por elo registrado desde L3.
+10. **Cobertura de Extrativo_AT** — esparsa antes de 2024; OOF stack mitiga parcialmente.
+11. **Sítios D/MG** — poucos casos; testes físicos majoritariamente sintéticos/YAML.
 
 ---
 
-## 8. Pacotes de trabalho (prévia para o backlog)
+## 8. Pacotes de trabalho (status backlog)
 
-| Pacote | Componentes | Resultado |
-|---|---|---|
-| **P1 — Dados** | C1 + C2 | Dataset + features auditáveis |
-| **P2 — Cascata** | C3 + C4 + C5 | Modelos encadeados + baseline |
-| **P3 — Aceite** | C6 + C7 | Matrizes A/B/C + explicabilidade |
-| **P4 — Produto** | C8 + template | Simulador homologável |
-| **P5 — Fechamento** | C9 (+ C3b/NN se go) | Relatório e encerramento |
+| Pacote | Componentes | Resultado | Status |
+|---|---|---|---|
+| **P1 — Dados** | C1 + C2 | Dataset + features auditáveis | ✅ Shipped |
+| **P2 — Cascata** | C3 + C4 + C5 | Modelos encadeados + candidatos L3 | ✅ Shipped |
+| **P3 — Aceite** | C6 + C7 | Matrizes A/B/C + explicabilidade | ✅ MVP (`accept`); gate verde pendente |
+| **P4 — Produto** | C8 + template | Simulador homologável | ⏭️ Próximo |
+| **P5 — Fechamento** | C9 (+ C3b/NN se go) | Relatório e encerramento | Pendente |
 
-Próximo passo natural: quebrar **P1→P5** em tarefas com dono, estimativa e DoD.
+**Próximo passo natural:** **P4 — Camada 5 (UI demo)** consumindo `acceptance_report.json` + inferência L3, em paralelo opcional à iteração MAE (P2/P3).
+
+---
+
+## 9. CLIs e artefatos principais
+
+| CLI | Comando exemplo | Artefato |
+|-----|-----------------|----------|
+| `ingest` | `ingest batch --source excel.xlsx` | `data/l2/published/{batch_id}/` |
+| `simulate` | `simulate train --l2-root data/l2` | `models/candidates/{run_id}/` |
+| `simulate` | `simulate infer --cenario-id X --mode A --run-id {id}` | predição Modo A/B |
+| `accept` | `accept run --run-id {id}` | `reports/acceptance/{run_id}/acceptance_report.json` |
+
+Versão do pacote: **0.3.0** (`pyproject.toml`). Histórico: `docs/CHANGELOG.md`.
 
 ---
 

@@ -3,7 +3,7 @@
 **Autor:** Emerson Antônio (Cientista de Dados)  
 **Stakeholder:** Thiago Taglialegna Salles  
 **Time:** Keyrus | Veracel — Squad Sustentação  
-**Status:** Camadas 2 e 3 implementadas — Camada 4 (Aceite) em SDD Define
+**Status:** Camadas 2–4 implementadas (v0.3.0) — próximo: Camada 5 (UI demo)
 
 ---
 
@@ -54,10 +54,12 @@ Imputação de densidade: `DB_LAB = 0,985 × DB_SGF` (fator legado 0,88 obsoleto
 ```text
 Camada 1 — Domínio (regras, faixas, Modo A/B)
 Camada 2 — Ingest Engine          ← implementado (v0.1.0)
-Camada 3 — Motor de Simulação     ← implementado (v0.2.0)
-Camada 4 — Confiança e Aceite     ← DEFINE em andamento
-Camada 5 — Superfície de Uso (UI React)
+Camada 3 — Motor de Simulação     ← implementado (v0.2.x)
+Camada 4 — Confiança e Aceite     ← implementado (v0.3.0)
+Camada 5 — Superfície de Uso (UI React)  ← próximo
 ```
+
+Mapa de componentes: [`docs/sketch/MAPA_COMPONENTES_GIFI.md`](docs/sketch/MAPA_COMPONENTES_GIFI.md)
 
 Diagrama geral: `graphics/mapa_componentes_gifi.png`  
 Diagramas do Ingest: [`docs/diagrams/INGEST_ENGINE.md`](docs/diagrams/INGEST_ENGINE.md)
@@ -107,41 +109,60 @@ Treina cascata Elo 1→2→3 (Baseline / ElasticNet / RandomForest), avalia hold
 
 ```bash
 simulate train --l2-root data/l2_excel_validation
-simulate evaluate
-simulate infer --cenario-id CEN-001 --mode A
+simulate evaluate --run-id <run_id>
+simulate infer --cenario-id CEN-001 --mode A --run-id <run_id>
 ```
 
 | Artefato L3 | Uso |
 |-------------|-----|
-| `models/candidates/{run_id}/` | Joblibs + manifesto + métricas |
+| `models/candidates/{run_id}/` | Joblibs + manifesto + métricas + explainability |
 | `current_candidate.json` | Pointer last-good (só se `release_ok=true`) |
 
 Evolução de modelos: manifesto JSON local (sem MLflow no MVP). Ver [`docs/adr/ADR-003-manifest-vs-mlflow.md`](docs/adr/ADR-003-manifest-vs-mlflow.md).
 
 ---
 
-## 9. Testes e qualidade
+## 9. Gate de Aceite (Camada 4)
+
+Executa Matrizes A∧B∧C sobre candidatos L3 e gera relatório auditável. Com MAE atual ~94–97, o gate retorna `demo_mode=true` (esperado até iterar modelagem).
+
+```bash
+accept run --run-id <run_id> --l2-root data/l2_excel_validation
+accept report --run-id <run_id>
+```
+
+| Artefato L4 | Uso |
+|-------------|-----|
+| `reports/acceptance/{run_id}/acceptance_report.json` | Flags `matriz_a/b/c`, `release_ok`, `demo_mode` |
+| `models/champion/{run_id}/` | Campeão produtivo (somente se `release_ok=true`) |
+
+---
+
+## 10. Testes e qualidade
 
 ```bash
 pytest tests/ -q -m "not slow"     # unitários (rápido)
 pytest tests/ -m slow -v           # smoke Excel L2
-pytest tests/ --cov=ingest --cov=simulation --cov-report=term-missing
+pytest tests/ --cov=ingest --cov=simulation --cov=acceptance --cov-report=term-missing
 ruff check src/ tests/
 ```
 
 ---
 
-## 10. Estrutura do repositório
+## 11. Estrutura do repositório
 
 ```text
 src/ingest/           Camada 2 — Ingest Engine
 src/simulation/       Camada 3 — Motor de Simulação
-config/               ingest.yaml, simulation.yaml
+src/acceptance/       Camada 4 — Gate de Aceite
+config/               ingest.yaml, simulation.yaml, acceptance.yaml
 tests/ingest/         Testes L2
 tests/simulation/     Testes L3
+tests/acceptance/     Testes L4
 scripts/setup_dev.sh  Bootstrap do venv
 data/l2/              Artefatos L2 (gitignored)
-models/               Candidatos L3 (gitignored)
+models/               Candidatos L3 + campeão (gitignored)
+reports/acceptance/   Relatórios de gate (gitignored)
 docs/guides/          Guias de desenvolvimento
 docs/adr/             Architecture Decision Records
 docs/kb/              Knowledge base normativa
@@ -149,20 +170,22 @@ docs/kb/              Knowledge base normativa
 
 ---
 
-## 11. Documentação
+## 12. Documentação
 
 | Documento | Conteúdo |
 |-----------|----------|
 | `docs/guides/DEV_ENVIRONMENT.md` | Ambiente, agentes, toolchain |
+| `docs/sketch/MAPA_COMPONENTES_GIFI.md` | Mapa C0–C9 e status das camadas |
 | `docs/adr/ADR-003-manifest-vs-mlflow.md` | Decisão MLOps / MLflow |
 | `docs/PRD_GIFI_v1.1.md` | Requisitos do produto |
 | `docs/sketch/AGENTES_E_KB_BACKBONE.md` | Roteamento de agentes |
 | `docs/diagrams/INGEST_ENGINE.md` | Diagrama L2 |
+| `docs/analysis/DIAGNOSTICO_MAE_ELO3.md` | Gap MAE vs gate 56 |
 | `docs/CHANGELOG.md` | Histórico de versões |
 
 ---
 
-## 12. Agentes especialistas (SDD)
+## 13. Agentes especialistas (SDD)
 
 | Camada | Agente |
 |--------|--------|
@@ -174,12 +197,12 @@ docs/kb/              Knowledge base normativa
 
 ---
 
-## 13. Pendências (Marco 2)
+## 14. Pendências (Marco 2)
 
-- Camada 4 — Matrizes A/B/C e gate de release
+- Camada 5 — UI React (modo demo com `demo_mode` do acceptance report)
+- Gate A∧B∧C verde — iterar L2/L3 (MAE ~94–97 vs gate 56)
+- Matriz B completa — expandir TC-01…08 além do MVP (TC-03/05 + TM)
 - CI pipeline + pre-commit
-- Melhorar MAE_TSA (atual ~95 vs gate 56)
-- Camada 5 — UI React
 
 ---
 
