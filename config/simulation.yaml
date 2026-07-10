@@ -1,0 +1,80 @@
+# Autor: Emerson Antônio | Data: 2026-07-10
+repo_root: "."
+l2_root: "data/l2"
+models_root: "models"
+logs_root: "logs/simulation"
+expected_schema_version: "1.0.0"
+random_state: 42
+families: [baseline, elasticnet, randomforest]
+holdout:
+  start: "2025-05-01"
+  end: "2025-10-30"
+mae_limit_report: 56.0
+db_proxy_factor: 0.985
+min_train_rows: 50
+tuning:
+  enabled: true
+  cv_folds: 5
+  elo3_families:
+    - elasticnet
+    - ridge
+    - lasso
+    - randomforest
+    - extratrees
+    - histgradientboosting
+    - xgboost
+    - lightgbm
+    - catboost
+  grid_search_pool: train
+  training_pool: train
+  train_fraction: 0.8
+  elo3_oof_stack: true
+  elo3_cascade_fill: false
+  select_by_cascade: true
+  n_jobs: -1
+  fast: false
+io:
+  read_timeout_s: 120
+  lock_timeout_s: 30
+  max_retries: 3
+elo_specs:
+  elo1:
+    target: Extrativo_AT
+    features:
+      - pct_A
+      - pct_B
+      - pct_C
+      - pct_D
+      - pct_MG
+      - pct_ABC
+      - pct_CDMG
+      - mix_entropy
+      - mix_hhi
+      - dom_A
+      - dom_B
+      - dom_C
+      - dom_D
+      - dom_MG
+      - Idade
+  elo2:
+    target: Carga_Alcalina
+    features:
+      - Extrativo_AT
+      - TPC
+      - DB_SGF
+  elo3:
+    target: TSA_dia
+    features:
+      - pct_ABC
+      - pct_CDMG
+      - mix_entropy
+      - mix_hhi
+      - DB_LAB
+      - Extrativo_AT
+      - Carga_Alcalina
+      - TPC
+      - VMI
+      - Volume_m3
+      - Kappa
+    optional_features:
+      - Casca_pct

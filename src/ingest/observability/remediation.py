@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +13,7 @@ def record_remediation(l2_root: Path, record: dict[str, Any]) -> Path:
         **record,
         "remediation_id": remediation_id,
         "resolved_at": record.get(
-            "resolved_at", datetime.now(timezone.utc).isoformat()
+            "resolved_at", datetime.now(UTC).isoformat()
         ),
     }
     out_dir = l2_root / "remediation"

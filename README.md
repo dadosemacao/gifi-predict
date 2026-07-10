@@ -3,7 +3,7 @@
 **Autor:** Emerson Antônio (Cientista de Dados)  
 **Stakeholder:** Thiago Taglialegna Salles  
 **Time:** Keyrus | Veracel — Squad Sustentação  
-**Status:** Camada 2 (Ingest Engine) implementada — Camada 3 em planejamento
+**Status:** Camadas 2 e 3 implementadas — Camada 4 (Aceite) em SDD Define
 
 ---
 
@@ -53,9 +53,9 @@ Imputação de densidade: `DB_LAB = 0,985 × DB_SGF` (fator legado 0,88 obsoleto
 
 ```text
 Camada 1 — Domínio (regras, faixas, Modo A/B)
-Camada 2 — Ingest Engine     ← implementado (v0.1.0)
-Camada 3 — Motor de Simulação (cascata Elo 1→2→3)
-Camada 4 — Confiança e Aceite (Matrizes A/B/C)
+Camada 2 — Ingest Engine          ← implementado (v0.1.0)
+Camada 3 — Motor de Simulação     ← implementado (v0.2.0)
+Camada 4 — Confiança e Aceite     ← DEFINE em andamento
 Camada 5 — Superfície de Uso (UI React)
 ```
 
@@ -64,93 +64,122 @@ Diagramas do Ingest: [`docs/diagrams/INGEST_ENGINE.md`](docs/diagrams/INGEST_ENG
 
 ---
 
-## 6. Ingest Engine (Camada 2) — uso rápido
+## 6. Setup do ambiente
+
+**Python recomendado:** 3.12 (ver `.python-version`)
+
+```bash
+./scripts/setup_dev.sh
+source .venv/bin/activate
+```
+
+Guia completo: [`docs/guides/DEV_ENVIRONMENT.md`](docs/guides/DEV_ENVIRONMENT.md)
+
+Dependências:
+
+| Arquivo | Uso |
+|---------|-----|
+| `pyproject.toml` | Fonte única de verdade |
+| `uv.lock` | Lock file reproduzível |
+| `requirements.txt` | CI/Docker (gerado via `uv export`) |
+| `requirements-dev.txt` | Dev + testes + ruff |
+
+---
+
+## 7. Ingest Engine (Camada 2)
 
 Transforma Excel QM×Processo e uploads de cenário em artefatos L2 versionados (Parquet + manifesto JSON).
 
-### Setup
-
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-```
-
-### Comandos CLI
-
-```bash
-# Batch histórico (Excel ou CSV)
 ingest batch "excels/Base de dados QM x Processo 2018-2025_consolidado(Dados).xlsx"
-
-# Cenário online (Modo B)
 ingest scenario-validate uploads/cenario.csv --cenario-id CEN-001
 ingest scenario-publish uploads/cenario.csv --cenario-id CEN-001
-
-# Reprocesso após ACCEPT_DATA_REJECT
 ingest reprocess
 ```
 
-### Testes
+**Validação Excel real (2026-07-10):** 7.573 turnos → 7.064 train + 500 holdout.
+
+---
+
+## 8. Motor de Simulação (Camada 3)
+
+Treina cascata Elo 1→2→3 (Baseline / ElasticNet / RandomForest), avalia holdout e empacota candidatos em `models/`.
 
 ```bash
-pytest tests/ingest -q                  # unitários (rápido)
-pytest tests/ingest -m slow -v          # smoke Excel real
+simulate train --l2-root data/l2_excel_validation
+simulate evaluate
+simulate infer --cenario-id CEN-001 --mode A
 ```
 
-### Artefatos L2 (`data/l2/`)
+| Artefato L3 | Uso |
+|-------------|-----|
+| `models/candidates/{run_id}/` | Joblibs + manifesto + métricas |
+| `current_candidate.json` | Pointer last-good (só se `release_ok=true`) |
 
-| Artefato | Grain | Uso |
-|----------|-------|-----|
-| `train_features.parquet` | `data_processo` + `turno` | Treino Camada 3 |
-| `holdout_features.parquet` | `data_processo` + `turno` | Matriz A (2025-05…10) |
-| `infer_features.parquet` | `cenario_id` + `linha` | Inferência Modo B |
-| `batch_manifest.json` | — | Rastreio, warnings, exclusions |
-| `current.json` | — | Pointer last-good |
-
-**Validação Excel real (2026-07-10):** 7.573 turnos lidos → 7.064 train + 500 holdout, `published_with_warnings`.
+Evolução de modelos: manifesto JSON local (sem MLflow no MVP). Ver [`docs/adr/ADR-003-manifest-vs-mlflow.md`](docs/adr/ADR-003-manifest-vs-mlflow.md).
 
 ---
 
-## 7. Estrutura do repositório
+## 9. Testes e qualidade
+
+```bash
+pytest tests/ -q -m "not slow"     # unitários (rápido)
+pytest tests/ -m slow -v           # smoke Excel L2
+pytest tests/ --cov=ingest --cov=simulation --cov-report=term-missing
+ruff check src/ tests/
+```
+
+---
+
+## 10. Estrutura do repositório
 
 ```text
-src/ingest/           Código Camada 2 (I1–I5)
-config/ingest.yaml    Paths, holdout, SLA online
-tests/ingest/         Testes pytest
-data/l2/              Artefatos publicados (gitignored)
-docs/                 PRD, KB, diagramas
-docs/diagrams/        Diagramas Mermaid (classes + fluxo ingest)
-docs/kb/              Knowledge base normativa (gifi-ingest, gifi-domain)
-excels/               Base QM×Processo 2018–2025
-graphics/             Diagramas e imagens
-.claude/sdd/archive/  Features SDD arquivadas
+src/ingest/           Camada 2 — Ingest Engine
+src/simulation/       Camada 3 — Motor de Simulação
+config/               ingest.yaml, simulation.yaml
+tests/ingest/         Testes L2
+tests/simulation/     Testes L3
+scripts/setup_dev.sh  Bootstrap do venv
+data/l2/              Artefatos L2 (gitignored)
+models/               Candidatos L3 (gitignored)
+docs/guides/          Guias de desenvolvimento
+docs/adr/             Architecture Decision Records
+docs/kb/              Knowledge base normativa
 ```
 
 ---
 
-## 8. Documentação
+## 11. Documentação
 
 | Documento | Conteúdo |
 |-----------|----------|
+| `docs/guides/DEV_ENVIRONMENT.md` | Ambiente, agentes, toolchain |
+| `docs/adr/ADR-003-manifest-vs-mlflow.md` | Decisão MLOps / MLflow |
 | `docs/PRD_GIFI_v1.1.md` | Requisitos do produto |
-| `docs/RESUMO_TECNICO_GIFI_v1.1.md` | Visão executiva e KPIs |
-| `docs/CASOS_TESTE_FUNCIONAIS_GIFI_v1.1.md` | Protocolo de homologação (TC/TM) |
-| `docs/sketch/ingest-engine.md` | Especificação macro do ingest |
-| `docs/diagrams/INGEST_ENGINE.md` | Diagrama de classes + fluxo L2 |
-| `docs/kb/gifi-ingest/` | Contratos YAML (colunas, sinais, warnings) |
+| `docs/sketch/AGENTES_E_KB_BACKBONE.md` | Roteamento de agentes |
+| `docs/diagrams/INGEST_ENGINE.md` | Diagrama L2 |
 | `docs/CHANGELOG.md` | Histórico de versões |
-| `.claude/sdd/archive/INGEST_ENGINE/` | SDD shipped (DEFINE, DESIGN, BUILD) |
 
-## 9. Escopo do MVP
+---
 
-**Dentro:** Ingest L2, cascata Elo 1→2→3, mix A/B/C, interface de simulação, explicabilidade assistida.  
-**Fora:** Caminho da Volta, integração cloud em tempo real, RCA automática, retreino na UI, Redes Neurais (experimento opcional).
+## 12. Agentes especialistas (SDD)
 
-## 10. Pendências (Marco 2)
+| Camada | Agente |
+|--------|--------|
+| Domínio | `gifi-domain-specialist` |
+| Ingest | `gifi-ingest-engineer` |
+| Simulação | `gifi-simulation-engineer` |
+| Aceite | `gifi-acceptance-engineer` |
+| UI | `react-frontend-architect` |
 
-- Motor de Simulação (Camada 3) consumindo `data/l2/current.json`
-- Testes E2E AT-011/012/014/017 (schema breaking, reprocess, determinismo, benchmark p95)
-- Entrega da base interpolada pela TI (fallback: Excel consolidado)
+---
+
+## 13. Pendências (Marco 2)
+
+- Camada 4 — Matrizes A/B/C e gate de release
+- CI pipeline + pre-commit
+- Melhorar MAE_TSA (atual ~95 vs gate 56)
+- Camada 5 — UI React
 
 ---
 

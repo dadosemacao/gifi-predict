@@ -1,0 +1,10 @@
+{
+  "dataset_version": "2026-07-10T12:00:00Z",
+  "schema_version": "1.0.0",
+  "paths": {
+    "train_features": "/Users/emerson.antonio/Developar/keyrus/veracel/gifi-predict/tests/simulation/fixtures/l2_mini/published/2026-07-10T12:00:00Z/train_features.parquet",
+    "holdout_features": "/Users/emerson.antonio/Developar/keyrus/veracel/gifi-predict/tests/simulation/fixtures/l2_mini/published/2026-07-10T12:00:00Z/holdout_features.parquet"
+  },
+  "manifest": "/Users/emerson.antonio/Developar/keyrus/veracel/gifi-predict/tests/simulation/fixtures/l2_mini/published/2026-07-10T12:00:00Z/batch_manifest.json",
+  "updated_at": "2026-07-10T12:00:00Z"
+}

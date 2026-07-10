@@ -5,7 +5,6 @@ import pandas as pd
 from ingest.config import IngestSettings
 from ingest.observability.signals import Severity, SignalCollector
 
-
 MIX_COLS = ["pct_A", "pct_B", "pct_C", "pct_D", "pct_MG"]
 DB_RANGE = (350.0, 650.0)
 

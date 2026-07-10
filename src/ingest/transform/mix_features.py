@@ -4,7 +4,6 @@ import math
 
 import pandas as pd
 
-
 MIX_PCTS = ["pct_A", "pct_B", "pct_C", "pct_D", "pct_MG"]
 DOM_SITES = ["A", "B", "C", "D", "MG"]
 

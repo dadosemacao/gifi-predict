@@ -4,6 +4,88 @@
 
 ---
 
+## [0.2.3] — 2026-07-10
+
+### Documentação
+
+- **`docs/analysis/RELATORIO_DADOS_ENGENHARIA_VARIAVEIS.md`** — relatório de problemas estruturais por variável para engenharia de dados.
+- **`docs/analysis/DIAGNOSTICO_MAE_ELO3.md`** — diagnóstico consolidado (MAE ~96 vs gate 56), evidências L2, experimentos e roadmap de melhoria.
+
+### Adicionado
+
+- **Stacking OOF (Elo 1→2→3):** `enrich_elo3_oof_features` preenche `Extrativo_AT` / `Carga_Alcalina` com predições out-of-fold temporais, expandindo treino Elo 3 para ~7 000 linhas com `TSA_dia` sem vazamento de holdout.
+- **Novas famílias Elo 3:** XGBoost, LightGBM, CatBoost, ExtraTrees, Ridge, Lasso (+ grids GridSearchCV).
+- Dependências: `xgboost`, `lightgbm`, `catboost`.
+- Teste `tests/simulation/test_oof_stack.py`.
+
+### Alterado
+
+- `config/simulation.yaml`: `elo3_oof_stack: true` e lista completa de famílias para tuning.
+- Falha em uma família durante GridSearch não interrompe as demais (registrada em `tuning_meta`).
+
+### Validado (Excel L2 + OOF)
+
+- Treino Elo 3 expandido: **6 997 linhas** (vs ~2 094 sem OOF).
+- Campeão cascata: **CatBoost** (RF / RF / CatBoost) — `mae_tsa_cascade = 96,70` (`release_ok=false`).
+- Melhor CV MAE (OOF): ElasticNet **64,1**; holdout honesto permanece acima do gate 56.
+
+---
+
+
+### Adicionado (modelagem Elo 3)
+
+- **GridSearchCV + TimeSeriesSplit** para Elo 3 (`elasticnet`, `randomforest`, `histgradientboosting`).
+- **Pools configuráveis** em `config/simulation.yaml`: `grid_search_pool`, `training_pool`, `train_fraction` (80/20 temporal).
+- **`cascade_training`:** preenchimento opcional de `Extrativo_AT` / `Carga_Alcalina` via predições Modo A para ampliar linhas de treino Elo 3.
+- **Seleção de campeão por `mae_tsa_cascade`** (busca conjunta elo1 × elo2 × elo3 no holdout).
+- **`n_jobs: -1`** no GridSearch para paralelização.
+
+### Validado (Excel L2)
+
+- Melhor candidato honesto: **MAE_TSA_cascade = 94,31** (campeões: RF / RF / EN).
+- Gate **MAE ≤ 56** não atingido (`release_ok=false`).
+- Gargalo: apenas ~2 094 linhas com `Extrativo_AT` observado para treino Elo 3; holdout 2025-05→10 permanece fora do fit.
+
+---
+
+
+### Adicionado
+
+- **SDD:** Camada 3 arquivada em `.claude/sdd/archive/SIMULATION_ENGINE/`.
+- **SDD:** DEFINE Camada 4 em `.claude/sdd/features/DEFINE_ACCEPTANCE_GATE.md`.
+
+### Adicionado (dev environment)
+
+- **Dev environment:** `scripts/setup_dev.sh`, `.python-version` (3.12), `uv.lock`, `requirements.txt`, `requirements-dev.txt`.
+- **Toolchain:** `ruff` + `pytest-cov` em `[project.optional-dependencies].dev`.
+- **Documentação:**
+  - `docs/guides/DEV_ENVIRONMENT.md` — auditoria, setup, agentes, comandos.
+  - `docs/adr/ADR-003-manifest-vs-mlflow.md` — decisão filesystem vs MLflow por marco.
+
+### Alterado
+
+- `README.md` — Camada 3, setup padronizado, estrutura atualizada.
+- `tests/simulation/conftest.py` — import de fixture corrigido para venv isolado.
+
+---
+
+## [0.2.0] — 2026-07-10
+
+### Adicionado
+
+- **Motor de Simulação (Camada 3):** pacote `src/simulation/` — cascata Elo 1→2→3, champion por elo, Modo A/B.
+- CLI `simulate` (`train`, `evaluate`, `infer`).
+- Configuração `config/simulation.yaml`.
+- Testes `tests/simulation/` (13 casos, incluindo smoke Excel L2).
+- Empacotamento L3 em `models/candidates/{run_id}/` com manifesto JSON.
+
+### Validado
+
+- 26 testes pytest (ingest + simulation).
+- Smoke `simulate train` com Excel L2: MAE_TSA_cascade ~94.79 (`release_ok=false`).
+
+---
+
 ## [0.1.0] — 2026-07-10
 
 ### Adicionado

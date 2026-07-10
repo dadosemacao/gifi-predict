@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 import pandas as pd
 
 from ingest.batch.pipeline import run_batch_pipeline

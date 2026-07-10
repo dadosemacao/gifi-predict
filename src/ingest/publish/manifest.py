@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
-
 
 from ingest.contracts.models import BatchIdentity
 from ingest.observability.signals import SignalCollector
@@ -31,9 +30,9 @@ def build_manifest(
         "warning_codes": [c for c in signals.codes() if c != "INGEST_FILTER_INFO"],
         "publish_status": publish_status,
         "holdout_eligible": holdout_eligible,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
     }
 
 
 def dataset_version_now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")

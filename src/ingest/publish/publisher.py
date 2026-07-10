@@ -3,16 +3,16 @@ from __future__ import annotations
 import json
 import os
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
 from ingest.contracts.models import PublishBlockedError, PublishConflictError
+from ingest.observability.signals import SignalCollector
 from ingest.publish.atomic_io import atomic_write_json
 from ingest.publish.parquet_writer import write_parquet
-from ingest.observability.signals import SignalCollector
 
 
 def publish_batch_artifacts(
@@ -62,7 +62,7 @@ def publish_batch_artifacts(
                 "schema_version": schema_version,
                 "paths": {k: str(final / f"{k}.parquet") for k in artifacts},
                 "manifest": str(final / "batch_manifest.json"),
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(UTC).isoformat(),
             }
             atomic_write_json(current_pointer, pointer)
             pointer_updated = True
