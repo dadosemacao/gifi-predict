@@ -1,0 +1,52 @@
+---
+description: Roteamento dos agentes GIFI (domínio, ingest, motor, aceite, UI) e KBs locais
+globs:
+  - docs/kb/**/*
+  - docs/sketch/ingest-engine.md
+  - docs/sketch/analytical-backbone.md
+  - docs/sketch/DECISOES_GIFI.md
+  - docs/sketch/AGENTES_E_KB_BACKBONE.md
+  - docs/PRD_GIFI_v1.1.md
+  - src/**/*
+alwaysApply: false
+---
+
+# Agentes e KBs GIFI
+
+Ao trabalhar em regras do brief, faixas, Modo A/B, decisões ou template de cenário:
+
+1. Carregar skill / agente `gifi-domain-specialist`
+2. Usar KB `docs/kb/gifi-domain/`
+
+Ao trabalhar em ingestão, conectores, publicação L2, sinais `INGEST_*`, remediação ou dual-path:
+
+1. Carregar skill / agente `gifi-ingest-engineer`
+2. Usar KB `docs/kb/gifi-ingest/` + `docs/kb/spreadsheet-connectors/`
+3. Norma ambígua → `gifi-domain-specialist`
+
+Ao trabalhar em cascata Elo1→2→3, treino EN/RF, Modo A/B de inferência ou MAE por elo:
+
+1. Carregar agente `gifi-simulation-engineer`
+2. Usar KB `docs/kb/ml-tabular/` (+ `gifi-domain` para contratos)
+
+Ao trabalhar em Matriz A/B/C, MAE≤56, campeão ou release gate:
+
+1. Carregar agente `gifi-acceptance-engineer`
+2. Usar `gifi-domain` (acceptance/champion) + `ml-tabular` (métricas/física)
+
+Ao trabalhar em UI React/Vite (upload, curvas, top-3):
+
+1. Carregar agente `react-frontend-architect`
+2. Usar KB `docs/kb/frontend-react/`
+3. Template/colunas → `gifi-domain-specialist`; bind prod → `gifi-acceptance-engineer`
+
+Definições canônicas:
+
+- Agentes: `.cursor/agents/*.md`
+- Skills: `.cursor/skills/{gifi-*,react-frontend-architect}/SKILL.md`
+- Manifesto KB: `docs/kb/_index.yaml`
+- Registro paths AgentSpec: `docs/sketch/AGENTES_E_KB_BACKBONE.md`
+
+Complementar com AgentSpec global: `data-contracts-engineer`, `data-quality-analyst`, `python-developer`, `test-generator`.
+
+Nunca usar o nome `sentinel-engine` — o plano oficial é `ingest-engine.md`.
