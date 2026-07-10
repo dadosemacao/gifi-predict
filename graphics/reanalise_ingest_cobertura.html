@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reanálise Ingest — KB e Agentes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-d: 'Fraunces', Georgia, serif;
+    --font-s: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-m: 'IBM Plex Mono', monospace;
+    --bg: #f3f6f8; --surface: #fff; --surface2: #e7eef3;
+    --text: #12202a; --dim: #5c6e7a; --accent: #0b5f7a;
+    --accent-dim: rgba(11,95,122,.08);
+    --ok: #15803d; --ok-dim: rgba(21,128,61,.1);
+    --warn: #b45309; --warn-dim: rgba(180,83,9,.1);
+    --no: #b91c1c; --no-dim: rgba(185,28,28,.1);
+    --border: rgba(18,32,42,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0b1419; --surface:#132029; --surface2:#1a2c38;
+      --text:#e6eef3; --dim:#9bb0bd; --accent:#5ec8e8;
+      --accent-dim:rgba(94,200,232,.12);
+      --ok:#4ade80; --ok-dim:rgba(74,222,128,.12);
+      --warn:#fbbf24; --warn-dim:rgba(251,191,36,.12);
+      --no:#f87171; --no-dim:rgba(248,113,113,.12);
+      --border:rgba(255,255,255,.08);
+    }
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-s);background:var(--bg);color:var(--text);padding:40px 24px 72px;
+    background-image:radial-gradient(ellipse at 10% 0%,var(--accent-dim),transparent 50%)}
+  .c{max-width:1040px;margin:0 auto}
+  h1{font-family:var(--font-d);font-size:32px;font-weight:600}
+  .sub{font-family:var(--font-m);font-size:12px;color:var(--dim);margin:8px 0 20px}
+  .lead{color:var(--dim);max-width:70ch;margin-bottom:22px;line-height:1.55}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:28px}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+  .kpi b{display:block;font-family:var(--font-m);font-size:26px;color:var(--accent)}
+  .kpi span{font-size:12px;color:var(--dim)}
+  h2{font-family:var(--font-d);font-size:20px;margin:28px 0 12px}
+  .wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px}
+  .scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:var(--surface2);font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);text-align:left;padding:12px 14px;border-bottom:2px solid var(--border)}
+  td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+  tr:nth-child(even) td{background:var(--accent-dim)}
+  code{font-family:var(--font-m);font-size:11px;background:var(--accent-dim);color:var(--accent);padding:1px 5px;border-radius:3px}
+  .b{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-m);font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px}
+  .b::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+  .ok{background:var(--ok-dim);color:var(--ok)}
+  .partial{background:var(--warn-dim);color:var(--warn)}
+  .no{background:var(--no-dim);color:var(--no)}
+  .foot{margin-top:28px;font-family:var(--font-m);font-size:11px;color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="c">
+  <h1>Reanálise — Ingest Engine</h1>
+  <p class="sub">ingest-engine.md × docs/kb × AgentSpec MCP · 2026-07-09 · Emerson Antônio</p>
+  <p class="lead">Após KBs e agentes GIFI: <strong>não</strong> adquirir novos domínios nem novos agentes para o Ingest. Restam só extensões P1 dentro de <code>gifi-ingest</code>; o restante reutiliza AgentSpec.</p>
+
+  <div class="kpis">
+    <div class="kpi"><b>0</b><span>KBs novas a criar</span></div>
+    <div class="kpi"><b>0</b><span>Agentes novos Ingest</span></div>
+    <div class="kpi"><b>3</b><span>Extensões P1 (mesmo domínio)</span></div>
+    <div class="kpi"><b>6</b><span>Agentes AgentSpec a reusar</span></div>
+  </div>
+
+  <h2>1. Decisão de aquisição</h2>
+  <div class="wrap"><div class="scroll"><table>
+    <thead><tr><th>Item</th><th>Decisão</th><th>Motivo MCP / local</th></tr></thead>
+    <tbody>
+      <tr><td>Nova KB domínio</td><td><span class="b no">Não</span></td><td>Quarentena, obs, ODCS, DVC, schema já em AgentSpec</td></tr>
+      <tr><td>Novo agente GIFI-Ingest</td><td><span class="b no">Não</span></td><td><code>gifi-domain</code> + <code>gifi-ingest-engineer</code> bastam</td></tr>
+      <tr><td><code>feature-columns.yaml</code></td><td><span class="b partial">Estender</span></td><td>Plano §4.2 lista fixa ainda não está em YAML</td></tr>
+      <tr><td>Evidência remediação</td><td><span class="b partial">Estender</span></td><td>I5 / §3 passo 7 — schema antes-depois</td></tr>
+      <tr><td>Logging estruturado MVP</td><td><span class="b partial">Estender</span></td><td>Alinhar a pilares de <code>data-quality/observability</code></td></tr>
+      <tr><td><code>data-contracts-engineer</code></td><td><span class="b ok">Reusar</span></td><td>route_agent score 17 (ODCS)</td></tr>
+      <tr><td><code>data-quality-analyst</code></td><td><span class="b ok">Reusar</span></td><td>Gates + obs</td></tr>
+      <tr><td><code>test-generator</code></td><td><span class="b ok">Reusar</span></td><td>TC-P01 / TC-08 / TC-A02</td></tr>
+      <tr><td><code>medallion-architect</code></td><td><span class="b ok">Reusar</span></td><td><code>data-quality-gates</code> quarentena</td></tr>
+      <tr><td><code>airflow-specialist</code></td><td><span class="b ok">Reusar*</span></td><td>Só se houver DAG; score 15</td></tr>
+      <tr><td>GenAI / LLM / Qdrant</td><td><span class="b no">Ignorar</span></td><td>Falso positivo; Ingest determinístico</td></tr>
+    </tbody>
+  </table></div></div>
+
+  <h2>2. Cobertura I1–I5</h2>
+  <div class="wrap"><div class="scroll"><table>
+    <thead><tr><th>Comp.</th><th>Status</th><th>KB / Agente</th></tr></thead>
+    <tbody>
+      <tr><td>I1</td><td><span class="b ok">Coberto</span></td><td><code>spreadsheet-connectors</code> + ingest-engineer</td></tr>
+      <tr><td>I2</td><td><span class="b ok">Coberto</span></td><td><code>gifi-domain</code> + AgentSpec schema-validation / contracts</td></tr>
+      <tr><td>I3</td><td><span class="b ok">Coberto</span></td><td>mix / 0,985 / ponderação em <code>gifi-domain</code></td></tr>
+      <tr><td>I4</td><td><span class="b partial">Parcial</span></td><td>artifact-contract ok; falta lista de features</td></tr>
+      <tr><td>I5</td><td><span class="b partial">Parcial</span></td><td>sinais/remediação ok; evidência + logs = P1</td></tr>
+    </tbody>
+  </table></div></div>
+
+  <h2>3. Ordem sugerida</h2>
+  <div class="wrap"><div class="scroll"><table>
+    <thead><tr><th>#</th><th>Ação</th><th>Bloqueia build?</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Escrever <code>gifi-ingest/specs/feature-columns.yaml</code></td><td>Não (recomendado antes I4)</td></tr>
+      <tr><td>2</td><td>Spec/pattern evidencia remediação + logging I5</td><td>Não</td></tr>
+      <tr><td>3</td><td>SDD Define/Design com <code>gifi-ingest-engineer</code></td><td>—</td></tr>
+      <tr><td>4</td><td>Airflow só se operação batch exigir DAG</td><td>Não (MVP)</td></tr>
+    </tbody>
+  </table></div></div>
+
+  <p class="foot">Fontes MCP: route_agent, kb_search/read (data-quality, medallion, ai-data-engineering). Context7: Pydantic. Doc: docs/kb/REANALISE_INGEST_COBERTURA.md</p>
+</div>
+</body>
+</html>

@@ -164,7 +164,7 @@ Nomes semânticos (`train_features`, etc.) **não bastam**. Todo artefato public
 | **Versão de schema** | `schema_version` (semver) em todo artefato e no manifesto |
 | **Versão de dados** | `dataset_version` + `source_hash` (rastreio ao lote de origem) |
 | **Compatibilidade** | Mudança **backward-compatible** = incrementa minor; **breaking** = incrementa major + exige aceite da Camada 4 antes de consumir |
-| **Contrato de colunas** | Lista fixa de features + tipos + unidade; coluna nova sem major-bump é **proibida** |
+| **Contrato de colunas** | Lista fixa em `docs/kb/gifi-ingest/specs/feature-columns.yaml` (+ tipos/unidade); coluna nova sem major-bump é **proibida** |
 | **Flags de origem** | `db_origin ∈ {lab, proxy}`; `extr_origin ∈ {medido, estimado}` |
 | **Join treino↔inferência** | Mesma ordem/tipo de features garantida por `schema_version` idêntico |
 
@@ -287,6 +287,8 @@ Registro completo: `DECISOES_GIFI.md`.
 | `PRD_GIFI_v1.1.md` | Regras de dados e aceite |
 | `REFERENCIA_FAIXAS_OPERACIONAIS.md` | Limiares de validação |
 | `CASOS_TESTE_FUNCIONAIS_GIFI_v1.1.md` | TC de pipeline / features |
+| `docs/kb/` (`gifi-domain`, `gifi-ingest`, `spreadsheet-connectors`) | KB AgentSpec do Ingest (v0.1, 2026-07-09) |
+| `docs/kb/REANALISE_INGEST_COBERTURA.md` | Gap analysis pós-KBs/agentes — **0 KBs/agentes novos**; só extensões P1 |
 | Este arquivo | Plano macro do sistema de ingestão |
 
 ---

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentSpec × Ingest Engine — KB e Agentes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Source Serif 4', Georgia, serif;
+    --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --bg: #f4f7f5;
+    --surface: #ffffff;
+    --surface2: #e8f0eb;
+    --text: #14201a;
+    --text-dim: #5a6b62;
+    --accent: #0f6b4c;
+    --accent-dim: rgba(15, 107, 76, 0.08);
+    --green: #15803d;
+    --green-dim: rgba(21, 128, 61, 0.1);
+    --orange: #b45309;
+    --orange-dim: rgba(180, 83, 9, 0.1);
+    --red: #b91c1c;
+    --red-dim: rgba(185, 28, 28, 0.1);
+    --blue: #1d4ed8;
+    --blue-dim: rgba(29, 78, 216, 0.08);
+    --border: rgba(20, 32, 26, 0.08);
+    --border-bright: rgba(20, 32, 26, 0.16);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c1410; --surface: #152018; --surface2: #1c2a22;
+      --text: #e7f0ea; --text-dim: #9bb0a4; --accent: #34d399;
+      --accent-dim: rgba(52, 211, 153, 0.12);
+      --green: #4ade80; --green-dim: rgba(74, 222, 128, 0.12);
+      --orange: #fbbf24; --orange-dim: rgba(251, 191, 36, 0.12);
+      --red: #f87171; --red-dim: rgba(248, 113, 113, 0.12);
+      --blue: #93c5fd; --blue-dim: rgba(147, 197, 253, 0.12);
+      --border: rgba(255,255,255,0.06); --border-bright: rgba(255,255,255,0.12);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 20% 0%, var(--accent-dim) 0%, transparent 45%),
+      radial-gradient(ellipse at 90% 80%, var(--blue-dim) 0%, transparent 40%);
+    color: var(--text);
+    font-family: var(--font-sans);
+    padding: 40px 24px 80px;
+    line-height: 1.5;
+  }
+  .container { max-width: 1080px; margin: 0 auto; }
+  h1 { font-family: var(--font-display); font-size: 34px; font-weight: 600; letter-spacing: -0.02em; }
+  .subtitle { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); margin: 8px 0 28px; }
+  h2 { font-family: var(--font-display); font-size: 22px; margin: 36px 0 14px; }
+  p.lead { color: var(--text-dim); max-width: 72ch; margin-bottom: 20px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; box-shadow: 0 8px 24px rgba(15, 40, 30, 0.04);
+  }
+  .kpi .n { font-family: var(--font-mono); font-size: 28px; font-weight: 600; color: var(--accent); }
+  .kpi .l { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+  .swatch { width: 10px; height: 10px; border-radius: 3px; }
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: var(--surface2); font-family: var(--font-mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim);
+    text-align: left; padding: 12px 14px; border-bottom: 2px solid var(--border-bright); white-space: nowrap;
+  }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:nth-child(even) td { background: var(--accent-dim); }
+  code { font-family: var(--font-mono); font-size: 11px; background: var(--accent-dim); color: var(--accent); padding: 1px 5px; border-radius: 3px; }
+  small { display: block; color: var(--text-dim); font-size: 11px; margin-top: 3px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    padding: 3px 9px; border-radius: 6px; white-space: nowrap;
+  }
+  .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .ok { background: var(--green-dim); color: var(--green); }
+  .gap { background: var(--red-dim); color: var(--red); }
+  .partial { background: var(--orange-dim); color: var(--orange); }
+  .reuse { background: var(--blue-dim); color: var(--blue); }
+  .flow {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 16px 0 28px;
+  }
+  .flow-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px;
+  }
+  .flow-card h3 { font-family: var(--font-mono); font-size: 12px; color: var(--accent); margin-bottom: 6px; }
+  .flow-card p { font-size: 12px; color: var(--text-dim); }
+  details {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 12px;
+  }
+  summary { cursor: pointer; font-weight: 600; }
+  .footer { margin-top: 40px; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>AgentSpec × Ingest Engine</h1>
+  <p class="subtitle">Fonte: docs/sketch/ingest-engine.md · AgentSpec route_agent + kb_search · 2026-07-09 · Emerson Antônio</p>
+  <p class="lead">
+    Diagnóstico de cobertura: o AgentSpec já cobre contratos, qualidade, medallion e implementação Python.
+    O buraco crítico é o domínio GIFI (regras do brief + ciclo batch/online + catálogo de sinais),
+    que não existe como KB nem como agente especializado.
+  </p>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="n">5</div><div class="l">Componentes I1–I5</div></div>
+    <div class="kpi"><div class="n">7</div><div class="l">KB existentes reutilizáveis</div></div>
+    <div class="kpi"><div class="n">3</div><div class="l">KB a adquirir</div></div>
+    <div class="kpi"><div class="n">8</div><div class="l">Agentes existentes a usar</div></div>
+    <div class="kpi"><div class="n">2</div><div class="l">Agentes novos criados</div></div>
+  </div>
+
+  <h2>1. Mapa componente → AgentSpec</h2>
+  <div class="flow">
+    <div class="flow-card"><h3>I1 Conectores</h3><p>Excel / TI / upload cenário. Gap: leitura planilha + dual-path.</p></div>
+    <div class="flow-card"><h3>I2 Validação</h3><p>Contrato + regras brief. Forte cobertura AgentSpec.</p></div>
+    <div class="flow-card"><h3>I3 Transformação</h3><p>Imputação DB + Mix A/B/C. Python ok; domínio GIFI ausente.</p></div>
+    <div class="flow-card"><h3>I4 Publicação</h3><p>Parquet + manifesto versionado. Contratos/medallion cobrem.</p></div>
+    <div class="flow-card"><h3>I5 Observabilidade</h3><p>Sinais, quarentena, remediação. DQ parcial; catálogo GIFI novo.</p></div>
+  </div>
+
+  <h2>2. Bases de conhecimento</h2>
+  <div class="legend">
+    <div class="legend-item"><span class="swatch" style="background:var(--green)"></span> Reutilizar</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--orange)"></span> Estender</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--red)"></span> Adquirir (novo)</div>
+  </div>
+  <div class="table-wrap"><div class="table-scroll">
+  <table>
+    <thead>
+      <tr><th>KB Domain</th><th>Status</th><th>O que cobre no Ingest</th><th>Prioridade</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>data-quality</code><small>ODCS, GE, Soda, schema-validation, observability</small></td>
+        <td><span class="badge ok">Reutilizar</span></td>
+        <td>I2 gates; bloqueante vs aviso; quarentena (padrão medallion); I5 logs de qualidade</td>
+        <td>P0</td>
+      </tr>
+      <tr>
+        <td><code>data-modeling</code><small>grain, evolução de schema</small></td>
+        <td><span class="badge ok">Reutilizar</span></td>
+        <td>PK <code>data_processo+turno</code>; semver de schema; join treino↔inferência</td>
+        <td>P0</td>
+      </tr>
+      <tr>
+        <td><code>medallion</code><small>bronze/silver/gold + quality gates</small></td>
+        <td><span class="badge ok">Reutilizar</span></td>
+        <td>Camada 2 como Silver/Gold; latest-good; quarantine table</td>
+        <td>P0</td>
+      </tr>
+      <tr>
+        <td><code>python</code> + <code>pydantic</code> + <code>testing</code></td>
+        <td><span class="badge ok">Reutilizar</span></td>
+        <td>Implementação I1–I4; validadores tipados; testes TC</td>
+        <td>P0</td>
+      </tr>
+      <tr>
+        <td><code>airflow</code><small>condicional à orquestração</small></td>
+        <td><span class="badge ok">Reutilizar</span></td>
+        <td>DAG batch histórico, reprocesso, sensores de fonte</td>
+        <td>P1</td>
+      </tr>
+      <tr>
+        <td><code>lakehouse</code> / <code>ai-data-engineering</code></td>
+        <td><span class="badge partial">Estender</span></td>
+        <td>Parquet/versionamento/treino; feature store atual é Feast-cêntrico (não Mix A/B/C)</td>
+        <td>P1</td>
+      </tr>
+      <tr>
+        <td><code>gifi-domain</code><small>NOVO — regras Camada 1</small></td>
+        <td><span class="badge gap">Adquirir</span></td>
+        <td>TSA&lt;1000; mix±0,02; DB[350,650]; k=0,985; Modo A/B; faixas; template cenário; Elo scope</td>
+        <td>P0 crítico</td>
+      </tr>
+      <tr>
+        <td><code>gifi-ingest</code><small>NOVO — padrões do engine</small></td>
+        <td><span class="badge gap">Adquirir</span></td>
+        <td>Dual-path batch/online; catálogo <code>INGEST_*</code>; matriz warnings; manifesto; remediação 7 passos</td>
+        <td>P0 crítico</td>
+      </tr>
+      <tr>
+        <td><code>spreadsheet-connectors</code><small>NOVO — Excel/TI</small></td>
+        <td><span class="badge gap">Adquirir</span></td>
+        <td>Leitura QM×Processo; hash de lote; tipagem; fallback Excel vs tabelas TI</td>
+        <td>P1</td>
+      </tr>
+    </tbody>
+  </table>
+  </div></div>
+
+  <h2>3. Agentes especialistas</h2>
+  <div class="legend">
+    <div class="legend-item"><span class="swatch" style="background:var(--blue)"></span> Existente — usar</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--red)"></span> Criar</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--orange)"></span> Evitar (falso positivo do router)</div>
+  </div>
+  <div class="table-wrap"><div class="table-scroll">
+  <table>
+    <thead>
+      <tr><th>Agente</th><th>Status</th><th>Papel no Ingest</th><th>KB ligada</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>data-contracts-engineer</code><small>score 29 em contratos</small></td>
+        <td><span class="badge reuse">Usar</span></td>
+        <td>§4 artefatos: <code>train_features</code>, <code>holdout_features</code>, <code>infer_features</code>, manifesto JSON, semver</td>
+        <td>data-quality, data-modeling</td>
+      </tr>
+      <tr>
+        <td><code>data-quality-analyst</code><small>score 24 em gates</small></td>
+        <td><span class="badge reuse">Usar</span></td>
+        <td>I2/I5: expectativas, severidade, quarentena, admissibilidade por contexto</td>
+        <td>data-quality, dbt</td>
+      </tr>
+      <tr>
+        <td><code>schema-designer</code></td>
+        <td><span class="badge reuse">Usar</span></td>
+        <td>Modelo do dataset; grain turno→dia; evolução breaking/minor</td>
+        <td>data-modeling</td>
+      </tr>
+      <tr>
+        <td><code>medallion-architect</code><small>score 17</small></td>
+        <td><span class="badge reuse">Usar</span></td>
+        <td>Arquitetura Camada 2 / publicação last-good</td>
+        <td>medallion, lakehouse</td>
+      </tr>
+      <tr>
+        <td><code>python-developer</code></td>
+        <td><span class="badge reuse">Usar</span></td>
+        <td>Código I1–I4 (pandas/polars/pydantic)</td>
+        <td>python, pydantic, testing</td>
+      </tr>
+      <tr>
+        <td><code>test-generator</code></td>
+        <td><span class="badge reuse">Usar</span></td>
+        <td>TC-P01, TC-08, TC-A02 e testes de sinais</td>
+        <td>testing, data-quality</td>
+      </tr>
+      <tr>
+        <td><code>pipeline-architect</code> / <code>airflow-specialist</code></td>
+        <td><span class="badge reuse">Usar</span></td>
+        <td>Orquestração do caminho batch + reprocesso</td>
+        <td>airflow</td>
+      </tr>
+      <tr>
+        <td><code>kb-architect</code></td>
+        <td><span class="badge reuse">Usar</span></td>
+        <td>Criar/validar os 3 domínios KB novos</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><code>gifi-domain-specialist</code><small>T2 criado</small></td>
+        <td><span class="badge ok">Criado</span></td>
+        <td><code>.cursor/agents/</code> + skill — guardião Camada 1</td>
+        <td>gifi-domain</td>
+      </tr>
+      <tr>
+        <td><code>gifi-ingest-engineer</code><small>T2 criado</small></td>
+        <td><span class="badge ok">Criado</span></td>
+        <td><code>.cursor/agents/</code> + skill — dono I1–I5</td>
+        <td>gifi-ingest + gifi-domain + spreadsheet-connectors</td>
+      </tr>
+      <tr>
+        <td><code>llm-specialist</code> / GenAI / Qdrant</td>
+        <td><span class="badge partial">Ignorar</span></td>
+        <td>Falso positivo do <code>route_agent</code> na query ampla — Ingest é determinístico, sem LLM</td>
+        <td>—</td>
+      </tr>
+    </tbody>
+  </table>
+  </div></div>
+
+  <h2>4. Ordem recomendada de aquisição</h2>
+  <div class="table-wrap"><div class="table-scroll">
+  <table>
+    <thead><tr><th>#</th><th>Ação</th><th>Agente executor</th><th>Desbloqueia</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Criar KB <code>gifi-domain</code> a partir de PRD + faixas + decisões</td><td><code>kb-architect</code></td><td>I2 regras de negócio</td></tr>
+      <tr><td>2</td><td>Criar KB <code>gifi-ingest</code> a partir de ingest-engine.md §3–4</td><td><code>kb-architect</code></td><td>Sinais + remediação + contratos operacionais</td></tr>
+      <tr><td>3</td><td>Agente <code>gifi-domain-specialist</code></td><td>feito</td><td>Aceite normativo</td></tr>
+      <tr><td>4</td><td>Agente <code>gifi-ingest-engineer</code></td><td>feito</td><td>Build I1→I4</td></tr>
+      <tr><td>5</td><td>KB <code>spreadsheet-connectors</code></td><td>feito</td><td>I1 histórico</td></tr>
+      <tr><td>6</td><td>Rodar SDD Define/Design do Ingest</td><td><code>define-agent</code> + ingest-engineer</td><td>Implementação</td></tr>
+    </tbody>
+  </table>
+  </div></div>
+
+  <details open>
+    <summary>Critério de pronto desta aquisição</summary>
+    <p style="margin-top:10px;color:var(--text-dim);font-size:13px;">
+      Um agente (humano ou AgentSpec) consegue implementar I2+I3 citando apenas KBs versionadas,
+      sem reler o PRD inteiro a cada sessão; e o catálogo de sinais §4.3 está codificado como
+      contratos testáveis (não como texto livre).
+    </p>
+  </details>
+
+  <p class="footer">
+    Métodos AgentSpec: route_agent (queries por componente), kb_search / kb_read.
+    Ruído descartado: GenAI/Vertex/Qdrant no ingest determinístico.
+  </p>
+</div>
+</body>
+</html>

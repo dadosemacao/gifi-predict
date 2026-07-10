@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentSpec — KB e Agentes para Analytical Backbone GIFI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --bg: #f4f7f2;
+    --surface: #ffffff;
+    --surface2: #e8efe6;
+    --text: #1a2420;
+    --text-dim: #5c6b64;
+    --accent: #0f6b4c;
+    --accent-dim: rgba(15, 107, 76, 0.08);
+    --green: #15803d;
+    --green-dim: rgba(21, 128, 61, 0.1);
+    --red: #b91c1c;
+    --red-dim: rgba(185, 28, 28, 0.1);
+    --orange: #b45309;
+    --orange-dim: rgba(180, 83, 9, 0.12);
+    --slate: #334155;
+    --border: rgba(26, 36, 32, 0.08);
+    --border-bright: rgba(26, 36, 32, 0.14);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1613;
+      --surface: #16201c;
+      --surface2: #1e2b25;
+      --text: #e8f0eb;
+      --text-dim: #9aada3;
+      --accent: #34d399;
+      --accent-dim: rgba(52, 211, 153, 0.12);
+      --green: #4ade80;
+      --green-dim: rgba(74, 222, 128, 0.12);
+      --red: #f87171;
+      --red-dim: rgba(248, 113, 113, 0.12);
+      --orange: #fbbf24;
+      --orange-dim: rgba(251, 191, 36, 0.12);
+      --border: rgba(232, 240, 235, 0.08);
+      --border-bright: rgba(232, 240, 235, 0.16);
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 15% 0%, var(--accent-dim) 0%, transparent 45%),
+      radial-gradient(ellipse at 90% 80%, var(--orange-dim) 0%, transparent 35%);
+    color: var(--text);
+    font-family: var(--font-sans);
+    padding: 36px 28px 64px;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate {
+    animation: fadeUp 0.4s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.05s);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+    }
+  }
+
+  .container { max-width: 1120px; margin: 0 auto; }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 4vw, 36px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 28px;
+  }
+
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  @media (max-width: 800px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+
+  .kpi-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .kpi-value {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .kpi-hint {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 500;
+    margin: 36px 0 14px;
+  }
+
+  .lead {
+    color: var(--text-dim);
+    font-size: 14px;
+    max-width: 70ch;
+    margin-bottom: 16px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .table-scroll { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th {
+    background: var(--surface2);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 2px solid var(--border-bright);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) { background: var(--accent-dim); }
+  tbody tr {
+    animation: fadeUp 0.35s ease-out both;
+    animation-delay: calc(var(--i, 0) * 0.04s);
+  }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  small {
+    display: block;
+    color: var(--text-dim);
+    font-size: 11px;
+    margin-top: 3px;
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .status--reuse { background: var(--green-dim); color: var(--green); }
+  .status--extend { background: var(--orange-dim); color: var(--orange); }
+  .status--create { background: var(--red-dim); color: var(--red); }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 800px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+
+  .card h3 {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .card ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .card li {
+    font-size: 13px;
+    padding-left: 14px;
+    position: relative;
+  }
+
+  .card li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .stack-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 800px) {
+    .stack-grid { grid-template-columns: 1fr; }
+  }
+
+  .stack-item {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .stack-item strong {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .stack-item span {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .priority {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 6px;
+  }
+
+  .p1 { background: var(--red-dim); color: var(--red); }
+  .p2 { background: var(--orange-dim); color: var(--orange); }
+  .p3 { background: var(--green-dim); color: var(--green); }
+
+  details {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+
+  summary {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--accent);
+  }
+
+  details p, details ul {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  details ul {
+    padding-left: 18px;
+  }
+
+  footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .verdict {
+    background: var(--surface);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="animate" style="--i:0">AgentSpec x Analytical Backbone</h1>
+    <p class="subtitle animate" style="--i:1">GIFI · Camadas 1–5 · Diagnóstico de KB e Agentes · 2026-07-09 · Emerson Antônio</p>
+
+    <div class="verdict animate" style="--i:2">
+      O AgentSpec cobre bem <strong>dados, contratos e qualidade</strong> (Camada 2).
+      Falha de forma crítica em <strong>ML tabular em cascata</strong> (Camada 3),
+      <strong>aceite físico A∧B∧C</strong> (Camada 4) e
+      <strong>frontend React</strong> (Camada 5) — zero domínio KB e zero agente especialista.
+    </div>
+
+    <div class="kpis animate" style="--i:3">
+      <div class="kpi">
+        <div class="kpi-label">KBs reutilizar</div>
+        <div class="kpi-value">7</div>
+        <div class="kpi-hint">já no catálogo AgentSpec</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">KBs adquirir</div>
+        <div class="kpi-value">3</div>
+        <div class="kpi-hint">domínio GIFI, ML, frontend</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Agentes reusar</div>
+        <div class="kpi-value">9</div>
+        <div class="kpi-hint">score alto nas camadas 1–2</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Agentes criar</div>
+        <div class="kpi-value">3</div>
+        <div class="kpi-hint">motor, aceite, UI React</div>
+      </div>
+    </div>
+
+    <h2>Cobertura por camada</h2>
+    <p class="lead">Cruzamento do plano macro (<code>analytical-backbone.md</code>) com <code>route_agent</code> + inventário de 24 domínios KB.</p>
+
+    <div class="legend">
+      <div class="legend-item"><span class="swatch" style="background:var(--green)"></span> Reutilizar</div>
+      <div class="legend-item"><span class="swatch" style="background:var(--orange)"></span> Estender / parcial</div>
+      <div class="legend-item"><span class="swatch" style="background:var(--red)"></span> Criar (gap)</div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Camada</th>
+              <th>Necessidade</th>
+              <th>KB hoje</th>
+              <th>Agentes hoje</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="--i:0">
+              <td><code>1 Domínio</code></td>
+              <td>PRD, faixas, TCs, política campeão<small>SSOT semântica</small></td>
+              <td><span class="status status--extend">Parcial</span><small>docs no repo; sem KB AgentSpec</small></td>
+              <td><code>the-planner</code>, <code>define-agent</code></td>
+              <td>Criar KB <code>gifi-domain</code></td>
+            </tr>
+            <tr style="--i:1">
+              <td><code>2 Dados</code></td>
+              <td>Ingest, schema, mix A/B/C, qualidade<small>Ingest Engine</small></td>
+              <td><span class="status status--reuse">Forte</span><small>data-quality, data-modeling, pydantic, modern-stack</small></td>
+              <td><code>data-quality-analyst</code>, <code>data-contracts-engineer</code>, <code>schema-designer</code>, <code>python-developer</code></td>
+              <td>Reusar; mapear padrões GIFI na KB nova</td>
+            </tr>
+            <tr style="--i:2">
+              <td><code>3 Motor</code></td>
+              <td>Cascata Elo 1→2→3, EN/RF, Modo A/B<small>sklearn tabular</small></td>
+              <td><span class="status status--create">Gap</span><small>só scraps Fabric/Feature Store RAG</small></td>
+              <td><span class="status status--create">Score ~2</span><small>nenhum agente ML tabular</small></td>
+              <td>KB <code>ml-tabular</code> + agente novo</td>
+            </tr>
+            <tr style="--i:3">
+              <td><code>4 Aceite</code></td>
+              <td>Matriz A/B/C, MAE≤56, gate A∧B∧C<small>física + detratores</small></td>
+              <td><span class="status status--create">Gap</span><small>testing genérico; sem MAE/física</small></td>
+              <td><code>test-generator</code>, <code>python-developer</code> (parcial)</td>
+              <td>KB domínio + agente de validação</td>
+            </tr>
+            <tr style="--i:4">
+              <td><code>5 Superfície</code></td>
+              <td>React TS UI, upload, curvas, top-3<small>homologação 31/08</small></td>
+              <td><span class="status status--create">Gap total</span><small>0 hits em frontend/Vite/Shadcn</small></td>
+              <td><span class="status status--create">Nenhum</span><small>route_agent não resolve React</small></td>
+              <td>KB <code>frontend-react</code> + agente UI</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h2>KBs a adquirir</h2>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Prioridade</th>
+              <th>Domínio KB</th>
+              <th>Conteúdo mínimo</th>
+              <th>Alimenta</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="--i:0">
+              <td><span class="priority p1">P0</span></td>
+              <td><code>gifi-domain</code></td>
+              <td>Faixas DB/Extrativos/TPC/Kappa; fator 0,985; alvo TSA/dia; holdout 2025-05→10; Elo 1b NO-GO; template cenário; Matrizes B/C canônicas<small>Fonte: PRD v1.1 + DECISOES_GIFI</small></td>
+              <td>Todas as camadas / todos agentes GIFI</td>
+            </tr>
+            <tr style="--i:1">
+              <td><span class="priority p1">P0</span></td>
+              <td><code>ml-tabular</code></td>
+              <td>Regressão em cascata; ElasticNet/RF; holdout temporal; MAE/RMSE/WAPE por elo; política campeão; constraints físicas; MLflow/artefato versionado<small>Não confundir com RAG / GenAI</small></td>
+              <td>Camadas 3–4</td>
+            </tr>
+            <tr style="--i:2">
+              <td><span class="priority p1">P0</span></td>
+              <td><code>frontend-react</code></td>
+              <td>Vite+React+TS; feature folders; Container/Presentational; Custom Hooks; Service Layer; RHF+Zod; TanStack Query; Zustand sob demanda; Error Boundary; State Separation; Vitest/RTL<small>Stack alinhada à imagem de padrões</small></td>
+              <td>Camada 5</td>
+            </tr>
+            <tr style="--i:3">
+              <td><span class="priority p2">P1</span></td>
+              <td>Estender <code>data-quality</code> + <code>testing</code></td>
+              <td>Padrões TC-08 / TC-P01 / TC-A02; somatório mix≈1; imputação DB; schema de cenário Modo A/B</td>
+              <td>Camada 2 + validação leve online</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h2>KBs já adequadas (reusar)</h2>
+    <div class="grid-2">
+      <div class="card animate" style="--i:0">
+        <h3>Cobertura forte</h3>
+        <ul>
+          <li><code>data-quality</code> — expectativas, contratos, observabilidade</li>
+          <li><code>data-modeling</code> — schema e evolução</li>
+          <li><code>pydantic</code> + <code>python</code> — contratos tipados backend</li>
+          <li><code>testing</code> — pytest / fixtures (Python)</li>
+          <li><code>modern-stack</code> — Polars/DuckDB para ingest local</li>
+        </ul>
+      </div>
+      <div class="card animate" style="--i:1">
+        <h3>Usar com cautela</h3>
+        <ul>
+          <li><code>ai-data-engineering</code> — feature store genérico; não é cascata industrial</li>
+          <li><code>microsoft-fabric</code> ML — só se plataforma for Fabric (não é default GIFI)</li>
+          <li><code>genai</code> / <code>prompt-engineering</code> — fora do MVP determinístico</li>
+          <li>Skill local <code>Data Science</code> — competência humana; ainda não é agente AgentSpec</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Agentes a criar</h2>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Agente</th>
+              <th>Tier sugerido</th>
+              <th>Responsabilidade</th>
+              <th>kb_domains</th>
+              <th>Escala para</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="--i:0">
+              <td><code>gifi-simulation-engineer</code></td>
+              <td>T1</td>
+              <td>Motor Elo 1→2→3; treino EN/RF; Modos A/B; report MAE por elo; artefato campeão<small>Camada 3</small></td>
+              <td><code>ml-tabular</code>, <code>gifi-domain</code>, <code>python</code>, <code>testing</code></td>
+              <td><code>gifi-acceptance-engineer</code>, <code>python-developer</code></td>
+            </tr>
+            <tr style="--i:1">
+              <td><code>gifi-acceptance-engineer</code></td>
+              <td>T1</td>
+              <td>Matriz A (holdout), B (física/monotonicidade), C (detratores); gate A∧B∧C; go/no-go release<small>Camada 4</small></td>
+              <td><code>gifi-domain</code>, <code>ml-tabular</code>, <code>testing</code>, <code>data-quality</code></td>
+              <td>user (stakeholder), <code>test-generator</code></td>
+            </tr>
+            <tr style="--i:2">
+              <td><code>react-frontend-architect</code></td>
+              <td>T2</td>
+              <td>App React/TS feature-based; upload cenário; curvas; painel detratores; service layer + Zod; Vitest<small>Camada 5 — genérico reutilizável</small></td>
+              <td><code>frontend-react</code>, (opcional) <code>gifi-domain</code> via patterns</td>
+              <td><code>gifi-simulation-engineer</code> (contrato API)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h2>Agentes existentes a manter no roteamento</h2>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Camada</th>
+              <th>Agentes AgentSpec</th>
+              <th>Papel no GIFI</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="--i:0">
+              <td>1</td>
+              <td><code>the-planner</code>, <code>define-agent</code>, <code>design-agent</code>, <code>kb-architect</code></td>
+              <td>Fechar contratos; criar/auditar KBs novas</td>
+            </tr>
+            <tr style="--i:1">
+              <td>2</td>
+              <td><code>schema-designer</code>, <code>data-contracts-engineer</code>, <code>data-quality-analyst</code>, <code>python-developer</code>, <code>test-generator</code></td>
+              <td>Ingest Engine + features + validação leve online</td>
+            </tr>
+            <tr style="--i:2">
+              <td>3–4</td>
+              <td><code>python-developer</code>, <code>test-generator</code>, <code>code-reviewer</code></td>
+              <td>Suporte; donos passam a ser os 2 agentes novos</td>
+            </tr>
+            <tr style="--i:3">
+              <td>5</td>
+              <td>—</td>
+              <td>Sem dono hoje → <code>react-frontend-architect</code></td>
+            </tr>
+            <tr style="--i:4">
+              <td>Transversal</td>
+              <td><code>brainstorm/define/design/build/ship/iterate</code></td>
+              <td>SDD por pacote (Ingest, Motor, UI)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h2>Camada 5 — stack e padrões (seu brief)</h2>
+    <div class="stack-box">
+      <div class="stack-grid">
+        <div class="stack-item">
+          <strong>Base</strong>
+          <span>React + TypeScript · Vite (recomendado MVP) ou Next.js · Tailwind + Shadcn UI</span>
+        </div>
+        <div class="stack-item">
+          <strong>Dados &amp; formulários</strong>
+          <span>TanStack Query · React Hook Form + Zod · Service Layer (sem axios espalhado)</span>
+        </div>
+        <div class="stack-item">
+          <strong>Estado &amp; qualidade</strong>
+          <span>Zustand só se sessão/UI global justificar · ESLint/Prettier · Vitest + RTL</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Padrão (imagem)</th>
+              <th>Onde no GIFI UI</th>
+              <th>Onde mora a regra</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="--i:0">
+              <td>Feature Folder</td>
+              <td><code>features/auth</code>, <code>features/cenarios</code>, <code>features/dashboard</code>, <code>features/detratores</code></td>
+              <td>Módulo, não por tipo de arquivo</td>
+            </tr>
+            <tr style="--i:1">
+              <td>Container / Presentational</td>
+              <td>Página de simulação vs. charts puros</td>
+              <td>Container coordena; chart só renderiza</td>
+            </tr>
+            <tr style="--i:2">
+              <td>Custom Hooks</td>
+              <td><code>useScenarioUpload</code>, <code>useSimulation</code>, <code>useDetractors</code></td>
+              <td>Hooks + services — não no JSX</td>
+            </tr>
+            <tr style="--i:3">
+              <td>Schema Validation</td>
+              <td><code>schemas/</code> espelhando template Camada 1</td>
+              <td>Zod ↔ contrato de colunas Modo A/B</td>
+            </tr>
+            <tr style="--i:4">
+              <td>Service Layer</td>
+              <td><code>services/simulationApi.ts</code></td>
+              <td>Único ponto TanStack Query / fetch</td>
+            </tr>
+            <tr style="--i:5">
+              <td>State Separation</td>
+              <td>Local (form) · Query (remoto) · URL (modo A/B) · Zustand (sessão mínima)</td>
+              <td>Evitar duplicar preditos no store</td>
+            </tr>
+            <tr style="--i:6">
+              <td>Error Boundary</td>
+              <td>Erro de parse/upload e falha de curva</td>
+              <td>Evita tela branca em homologação</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <details open>
+      <summary>Estrutura frontend recomendada (alinhada ao brief)</summary>
+      <pre style="font-family:var(--font-mono);font-size:11px;margin-top:12px;overflow:auto;line-height:1.6;color:var(--text-dim)">src/
+  app/                 # bootstrap, providers, ErrorBoundary
+  features/
+    auth/
+    cenarios/          # upload + template Modo A/B
+    dashboard/         # curvas TSA / Carga / Extrativos
+    detratores/        # consumo Matriz C
+    relatorios/        # aderência / desvios (pós-31/08)
+  components/ui|layout|shared/
+  hooks/ services/ lib/ schemas/ types/ stores/ routes/</pre>
+      <p>Regra crítica: <strong>não</strong> usar <code>useEffect</code> para orquestrar regra de negócio; TanStack Query para remoto, RHF para form, derivados síncronos para UI.</p>
+    </details>
+
+    <details>
+      <summary>Ordem sugerida de aquisição (desbloqueia o caminho crítico até 31/08)</summary>
+      <ul>
+        <li><strong>1.</strong> <code>kb-architect</code> cria <code>gifi-domain</code> a partir de PRD/DECISOES/faixas</li>
+        <li><strong>2.</strong> Criar <code>ml-tabular</code> + agente <code>gifi-simulation-engineer</code></li>
+        <li><strong>3.</strong> Criar <code>gifi-acceptance-engineer</code> (gate A∧B∧C; UI só demos até gate completo)</li>
+        <li><strong>4.</strong> Criar <code>frontend-react</code> + <code>react-frontend-architect</code> para UI modo demonstração</li>
+        <li><strong>5.</strong> Camada 2 permanece nos agentes DE existentes (já validados pelo route_agent)</li>
+      </ul>
+    </details>
+
+    <footer>
+      Fontes: docs/sketch/analytical-backbone.md · DECOMPOSICAO · MAPA · ingest-engine · AgentSpec KB README (24 domains) · route_agent MCP · skill local Data Science.<br>
+      Autoria: Emerson Antônio · 2026-07-09 · Artefato em graphics/ (sem commit automático).
+    </footer>
+  </div>
+</body>
+</html>

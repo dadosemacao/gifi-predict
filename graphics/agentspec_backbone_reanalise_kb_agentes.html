@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reanálise AgentSpec — Analytical Backbone GIFI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --bg: #f3f6f8;
+    --surface: #fff;
+    --surface2: #e7eef3;
+    --text: #152028;
+    --text-dim: #5a6b78;
+    --accent: #0b5f8a;
+    --accent-dim: rgba(11, 95, 138, 0.08);
+    --green: #15803d;
+    --green-dim: rgba(21, 128, 61, 0.1);
+    --red: #b91c1c;
+    --red-dim: rgba(185, 28, 28, 0.1);
+    --orange: #b45309;
+    --orange-dim: rgba(180, 83, 9, 0.12);
+    --border: rgba(21, 32, 40, 0.08);
+    --border-bright: rgba(21, 32, 40, 0.14);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1419; --surface: #152028; --surface2: #1c2a35;
+      --text: #e8eef3; --text-dim: #93a4b3; --accent: #5eb8e8;
+      --accent-dim: rgba(94, 184, 232, 0.12);
+      --green: #4ade80; --green-dim: rgba(74,222,128,.12);
+      --red: #f87171; --red-dim: rgba(248,113,113,.12);
+      --orange: #fbbf24; --orange-dim: rgba(251,191,36,.12);
+      --border: rgba(232,238,243,.08); --border-bright: rgba(232,238,243,.16);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans); background: var(--bg); color: var(--text);
+    background-image: radial-gradient(ellipse at 20% 0%, var(--accent-dim), transparent 45%);
+    padding: 36px 28px 64px; line-height: 1.5;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:none;} }
+  .animate { animation: fadeUp .35s ease-out both; animation-delay: calc(var(--i,0)*0.04s); }
+  .container { max-width: 1100px; margin: 0 auto; }
+  h1 { font-family: var(--font-display); font-size: clamp(26px,4vw,34px); font-weight:600; margin-bottom:8px; }
+  .subtitle { font-family: var(--font-mono); font-size:12px; color: var(--text-dim); margin-bottom:24px; }
+  .verdict {
+    background: var(--surface); border-left: 4px solid var(--green);
+    border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 24px; font-size: 14px;
+  }
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; }
+  @media (max-width:800px){ .kpis{grid-template-columns:repeat(2,1fr);} }
+  .kpi { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px; }
+  .kpi-label { font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); }
+  .kpi-value { font-family:var(--font-display); font-size:28px; color:var(--accent); margin-top:4px; }
+  .kpi-hint { font-size:12px; color:var(--text-dim); }
+  h2 { font-family:var(--font-display); font-size:22px; margin:32px 0 12px; font-weight:500; }
+  .lead { color:var(--text-dim); font-size:14px; margin-bottom:14px; max-width:72ch; }
+  .legend { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
+  .legend-item { display:flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:11px; color:var(--text-dim); }
+  .swatch { width:10px; height:10px; border-radius:3px; }
+  .table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:18px; }
+  .table-scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { background:var(--surface2); font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim); text-align:left; padding:12px 14px; border-bottom:2px solid var(--border-bright); }
+  td { padding:12px 14px; border-bottom:1px solid var(--border); vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  tbody tr:nth-child(even){ background:var(--accent-dim); }
+  tbody tr { animation: fadeUp .35s ease-out both; animation-delay: calc(var(--i,0)*0.04s); }
+  code { font-family:var(--font-mono); font-size:11px; background:var(--accent-dim); color:var(--accent); padding:1px 5px; border-radius:3px; }
+  small { display:block; color:var(--text-dim); font-size:11px; margin-top:3px; }
+  .status { display:inline-flex; align-items:center; gap:5px; font-family:var(--font-mono); font-size:10px; font-weight:600; padding:3px 10px; border-radius:6px; white-space:nowrap; }
+  .status::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .status--ok { background:var(--green-dim); color:var(--green); }
+  .status--extend { background:var(--orange-dim); color:var(--orange); }
+  .status--no { background:var(--green-dim); color:var(--green); }
+  .priority { font-family:var(--font-mono); font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; }
+  .p1 { background:var(--orange-dim); color:var(--orange); }
+  .p2 { background:var(--accent-dim); color:var(--accent); }
+  .p0 { background:var(--green-dim); color:var(--green); }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; }
+  @media (max-width:800px){ .grid-2{grid-template-columns:1fr;} }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; }
+  .card h3 { font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:.8px; color:var(--accent); margin-bottom:10px; }
+  .card ul { list-style:none; display:flex; flex-direction:column; gap:8px; }
+  .card li { font-size:13px; padding-left:14px; position:relative; }
+  .card li::before { content:''; position:absolute; left:0; top:8px; width:6px; height:6px; border-radius:50%; background:var(--accent); }
+  footer { margin-top:36px; padding-top:14px; border-top:1px solid var(--border); font-family:var(--font-mono); font-size:11px; color:var(--text-dim); }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1 class="animate" style="--i:0">Reanálise pós-scaffold</h1>
+  <p class="subtitle animate" style="--i:1">analytical-backbone.md × KBs × agentes × MCP route_agent / kb_search / Context7 · 2026-07-09</p>
+
+  <div class="verdict animate" style="--i:2">
+    <strong>Veredito:</strong> para o MVP da plataforma determinística (Camadas 1–5),
+    <strong>não é necessário criar novos agentes especialistas nem novos domínios KB</strong>.
+    O roteamento MCP já aponta o dono certo em cada camada (scores 17–29).
+    O que falta é <strong>extensão de conteúdo</strong> dentro das KBs existentes
+    (Matriz C/SHAP, curvas Recharts, serving de inferência, relatório de aderência).
+  </div>
+
+  <div class="kpis animate" style="--i:3">
+    <div class="kpi"><div class="kpi-label">Novos agentes</div><div class="kpi-value">0</div><div class="kpi-hint">MVP coberto</div></div>
+    <div class="kpi"><div class="kpi-label">Novos domínios KB</div><div class="kpi-value">0</div><div class="kpi-hint">só estender</div></div>
+    <div class="kpi"><div class="kpi-label">Extensões P1</div><div class="kpi-value">4</div><div class="kpi-hint">patterns/concepts</div></div>
+    <div class="kpi"><div class="kpi-label">Camadas OK</div><div class="kpi-value">5/5</div><div class="kpi-hint">route_agent validado</div></div>
+  </div>
+
+  <h2>Cobertura por camada (MCP route_agent)</h2>
+  <p class="lead">Após regenerar o agent-router (63 agentes, categoria <code>gifi</code>), cada camada tem dono primário com score alto.</p>
+  <div class="legend">
+    <div class="legend-item"><span class="swatch" style="background:var(--green)"></span> Coberto</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--orange)"></span> Estender conteúdo</div>
+  </div>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Camada</th><th>Agente #1 (score)</th><th>KBs</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr style="--i:0"><td><code>1 Domínio</code></td><td><code>gifi-domain-specialist</code> / acceptance (17)</td><td><code>gifi-domain</code></td><td><span class="status status--ok">Coberto</span></td></tr>
+          <tr style="--i:1"><td><code>2 Dados</code></td><td><code>gifi-ingest-engineer</code> (24)</td><td><code>gifi-ingest</code> + <code>spreadsheet-connectors</code> + domain</td><td><span class="status status--ok">Coberto</span></td></tr>
+          <tr style="--i:2"><td><code>3 Motor</code></td><td><code>gifi-simulation-engineer</code> (29)</td><td><code>ml-tabular</code> + domain</td><td><span class="status status--extend">Estender Matriz C / serving</span></td></tr>
+          <tr style="--i:3"><td><code>4 Aceite</code></td><td><code>gifi-acceptance-engineer</code> (27)</td><td>domain + ml-tabular + testing + DQ</td><td><span class="status status--extend">Estender protocolo C + relatório</span></td></tr>
+          <tr style="--i:4"><td><code>5 Superfície</code></td><td><code>react-frontend-architect</code> (24)</td><td><code>frontend-react</code> + domain</td><td><span class="status status--extend">Estender curvas / charts</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2>Gaps de conteúdo (kb_search + Context7) — não novos agentes</h2>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Pri</th><th>Gap</th><th>Evidência MCP</th><th>Ação recomendada</th><th>Dono</th></tr>
+        </thead>
+        <tbody>
+          <tr style="--i:0">
+            <td><span class="priority p1">P1</span></td>
+            <td>Matriz C operacional (top-3 ΔTSA / SHAP / permutation)</td>
+            <td><code>acceptance-matrices</code> só normativo; sem pattern de cálculo. Context7: <code>/shap/shap</code> TreeExplainer + sklearn <code>permutation_importance</code></td>
+            <td>Estender <code>ml-tabular</code>: <code>patterns/matriz-c-detractors.md</code> (+ concept se preciso)</td>
+            <td><code>gifi-acceptance-engineer</code> + simulation</td>
+          </tr>
+          <tr style="--i:1">
+            <td><span class="priority p1">P1</span></td>
+            <td>Curvas TSA/Carga/Extrativos na UI</td>
+            <td><code>kb_search recharts</code> = 0 hits. Context7: Recharts LineChart multi-series</td>
+            <td>Estender <code>frontend-react</code>: <code>patterns/production-curves-chart.md</code></td>
+            <td><code>react-frontend-architect</code></td>
+          </tr>
+          <tr style="--i:2">
+            <td><span class="priority p1">P1</span></td>
+            <td>Serving de inferência (upload → JSON curvas + detratores)</td>
+            <td>Só menção genérica a “inference API”; FastAPI aparece em testing. Context7: UploadFile + response_model</td>
+            <td>Estender <code>ml-tabular</code>: <code>patterns/inference-serving.md</code> (FastAPI+Pydantic); reusar KB <code>pydantic</code>/<code>python</code></td>
+            <td><code>gifi-simulation-engineer</code> + <code>python-developer</code></td>
+          </tr>
+          <tr style="--i:3">
+            <td><span class="priority p1">P1</span></td>
+            <td>Relatório de aderência / gestão de desvios</td>
+            <td><code>kb_search "relatório aderência"</code> = 0; PRD Marco 4</td>
+            <td>Estender <code>gifi-domain</code>: <code>patterns/adherence-report.md</code> (estrutura do entregável)</td>
+            <td><code>gifi-acceptance-engineer</code></td>
+          </tr>
+          <tr style="--i:4">
+            <td><span class="priority p2">P2</span></td>
+            <td>MLflow / registry cloud</td>
+            <td>Hits só Fabric/Databricks — fora do MVP local</td>
+            <td><strong>Não adquirir</strong> até decisão de plataforma cloud</td>
+            <td>—</td>
+          </tr>
+          <tr style="--i:5">
+            <td><span class="priority p2">P2</span></td>
+            <td>Elo 1b / NN</td>
+            <td>Explicitamente fora do MVP (backbone §1, D-B)</td>
+            <td><strong>Não adquirir</strong> até go/no-go pós-31/08</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2>O que NÃO criar agora</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Agentes (evitar proliferação)</h3>
+      <ul>
+        <li>Não criar <code>shap-specialist</code> / <code>explainability-agent</code> — cabe em acceptance + pattern ml-tabular</li>
+        <li>Não criar <code>charts-specialist</code> — pattern em frontend-react</li>
+        <li>Não criar <code>fastapi-specialist</code> — pattern + <code>python-developer</code></li>
+        <li>Não criar agente de “relatório” — entregável normativo em gifi-domain</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>KBs (evitar domínio novo)</h3>
+      <ul>
+        <li>Não criar domínio <code>shap</code> / <code>explainability</code> isolado</li>
+        <li>Não criar domínio <code>recharts</code> / <code>charts</code></li>
+        <li>Não criar domínio <code>fastapi</code> (usar pydantic + python AgentSpec)</li>
+        <li>Não espelhar Fabric/MLflow no caminho crítico local</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Reuso AgentSpec já cadastrado</h2>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Papel</th><th>Agente / KB</th><th>Quando</th></tr></thead>
+        <tbody>
+          <tr style="--i:0"><td>Implementação Python</td><td><code>python-developer</code> + KB <code>python</code>/<code>pydantic</code>/<code>testing</code></td><td>Motor, serving, testes</td></tr>
+          <tr style="--i:1"><td>Contratos / schema</td><td><code>data-contracts-engineer</code>, <code>schema-designer</code></td><td>Template + artefatos L2</td></tr>
+          <tr style="--i:2"><td>Qualidade</td><td><code>data-quality-analyst</code>, <code>test-generator</code></td><td>TC-08/P01/A02 + Matriz B</td></tr>
+          <tr style="--i:3"><td>SDD</td><td><code>define</code> → <code>design</code> → <code>build</code></td><td>Pacotes por camada</td></tr>
+          <tr style="--i:4"><td>Docs de lib</td><td>Context7 (sklearn, shap, recharts, FastAPI) + shadcn MCP</td><td>Ao escrever patterns P1</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2>Ordem sugerida (só conteúdo)</h2>
+  <div class="card" style="margin-bottom:18px">
+    <ol style="padding-left:18px; font-size:13px; display:flex; flex-direction:column; gap:8px;">
+      <li><strong>1.</strong> <code>ml-tabular/patterns/matriz-c-detractors.md</code> (SHAP TreeExplainer + fallback permutation) — desbloqueia Matriz C e painel UI</li>
+      <li><strong>2.</strong> <code>ml-tabular/patterns/inference-serving.md</code> (FastAPI upload + response curvas/detratores) — contrato Camada 3→5</li>
+      <li><strong>3.</strong> <code>frontend-react/patterns/production-curves-chart.md</code> (Recharts multi-series) — Marco 2 UI demo</li>
+      <li><strong>4.</strong> <code>gifi-domain/patterns/adherence-report.md</code> — Marco 4 (pode esperar pós-31/08 se UI demo for prioridade)</li>
+    </ol>
+  </div>
+
+  <footer>
+    Fontes: analytical-backbone.md · PRD §4–5 · docs/kb/_index.yaml · AgentSpec route_agent · kb_search · Context7 (sklearn, shap, recharts, FastAPI).<br>
+    Autoria: Emerson Antônio · 2026-07-09 · graphics/agentspec_backbone_reanalise_kb_agentes.html
+  </footer>
+</div>
+</body>
+</html>
