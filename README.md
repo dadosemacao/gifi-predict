@@ -3,7 +3,7 @@
 **Autor:** Emerson Antônio (Cientista de Dados)  
 **Stakeholder:** Thiago Taglialegna Salles  
 **Time:** Keyrus | Veracel — Squad Sustentação  
-**Status:** Camadas 2–4 implementadas (v0.3.0) — próximo: Camada 5 (UI demo)
+**Status:** Camadas 2–5 implementadas (v0.4.0) — gate A∧B∧C verde pendente (MAE > 56)
 
 ---
 
@@ -22,10 +22,18 @@ Planejamento (mix, sítio, idade, TPC, volume, DB_SGF, Kappa)
    Elo 2 → Carga Alcalina
    Elo 3 → TSA/dia
         │
-   Interface web: curva de TSA + top-3 detratores
+   Interface web: upload cenário + forecast operacional + what-if direto
 ```
 
 Elo 1b (% Casca) é **NO-GO no MVP**; casca entra como feature do Elo 3 apenas quando medida.
+
+**Produtos de inferência (Camada 5):**
+
+| Produto | API | Modelo | Uso |
+|---------|-----|--------|-----|
+| Cenário cascata | `POST /api/simulate` | Elo 1→2→3 Modo A/B | Upload planilha → curvas + top-3 |
+| Forecast operacional | `POST /api/forecast` | ExtraTrees residual + `TSA_roll3` | Próximo turno com histórico TSA |
+| What-if direto | `POST /api/predict-tsa` | Lasso (13 preditores) | TSA só com variáveis de processo |
 
 ## 3. Critérios de aceite (Matrizes A/B/C)
 
@@ -42,12 +50,17 @@ Release do MVP exige **A ∧ B ∧ C** (não intercambiáveis). Interface homolo
 | Variável | Unidade | Ótima | Crítica |
 |----------|---------|-------|---------|
 | DB_LAB | kg/m³ | 470–510 | <450 ou >520 |
+| DB_SGF | kg/m³ | 475–505 | <465 ou >515 |
 | Extrativo AT | % | 1,5–2,1 | >2,45 |
 | TPC | dias | 60–90 | <45 (madeira verde) |
 | Carga Alcalina | % Na₂O | 18,5–20,5 | >21,0 |
 | Kappa | — | 16–18 | <15 ou >18,5 |
+| % Casca | % | ≤1,0 | >1,5 |
 
 Imputação de densidade: `DB_LAB = 0,985 × DB_SGF` (fator legado 0,88 obsoleto).
+
+**13 preditores oficiais TSA (Camada 3, SSOT `process_specs.py`):**  
+Carga_Alcalina, Kappa, Prod_alcali_class, DB_SGF, Idade, TPC, pct_AB, pct_DMG, vmi_le_021, vmi_021_025, vmi_gt_025, Extrativo_AT, Casca_pct.
 
 ## 5. Arquitetura (5 camadas)
 
@@ -56,7 +69,9 @@ Camada 1 — Domínio (regras, faixas, Modo A/B)
 Camada 2 — Ingest Engine          ← implementado (v0.1.0)
 Camada 3 — Motor de Simulação     ← implementado (v0.2.x)
 Camada 4 — Confiança e Aceite     ← implementado (v0.3.0)
-Camada 5 — Superfície de Uso (UI React)  ← próximo
+Camada 5 — Superfície de Uso      ← implementado (v0.4.0)
+  ├── FastAPI serving (src/serving/)
+  └── React SPA (web/)
 ```
 
 Mapa de componentes: [`docs/sketch/MAPA_COMPONENTES_GIFI.md`](docs/sketch/MAPA_COMPONENTES_GIFI.md)
@@ -117,6 +132,7 @@ simulate infer --cenario-id CEN-001 --mode A --run-id <run_id>
 |-------------|-----|
 | `models/candidates/{run_id}/` | Joblibs + manifesto + métricas + explainability |
 | `current_candidate.json` | Pointer last-good (só se `release_ok=true`) |
+| `models/primeira_base/` | Forecast operacional + what-if direto (primeira base) |
 
 Evolução de modelos: manifesto JSON local (sem MLflow no MVP). Ver [`docs/adr/ADR-003-manifest-vs-mlflow.md`](docs/adr/ADR-003-manifest-vs-mlflow.md).
 
@@ -124,7 +140,7 @@ Evolução de modelos: manifesto JSON local (sem MLflow no MVP). Ver [`docs/adr/
 
 ## 9. Gate de Aceite (Camada 4)
 
-Executa Matrizes A∧B∧C sobre candidatos L3 e gera relatório auditável. Com MAE atual ~94–97, o gate retorna `demo_mode=true` (esperado até iterar modelagem).
+Executa Matrizes A∧B∧C sobre candidatos L3 e gera relatório auditável. Com MAE atual ~89–97, o gate retorna `demo_mode=true` (esperado até iterar modelagem).
 
 ```bash
 accept run --run-id <run_id> --l2-root data/l2_excel_validation
@@ -138,44 +154,86 @@ accept report --run-id <run_id>
 
 ---
 
-## 10. Testes e qualidade
+## 10. Serving + UI (Camada 5)
+
+**Backend FastAPI** expõe inferência, validação de cenário, status de release e auditoria SQLite.
+
+```bash
+# API + SPA build (produção local)
+serve run --port 8000
+
+# Dev: API :8000 + Vite :5173 com proxy /api
+./scripts/dev_ui.sh
+```
+
+| Endpoint | Método | Descrição |
+|----------|--------|-----------|
+| `/api/scenario/validate` | POST | Validação leve de upload (schema/mix) |
+| `/api/simulate` | POST | Inferência cascata Modo A/B + curvas + detratores |
+| `/api/forecast` | POST | Forecast operacional (histórico TSA obrigatório) |
+| `/api/predict-tsa` | POST | What-if direto (13 preditores) |
+| `/api/forecast/status` | GET | Status do modelo forecast |
+| `/api/predict-tsa/status` | GET | Status do modelo what-if |
+| `/api/release-status` | GET | `release_ok`, `demo_mode`, MAE holdout |
+| `/api/template` | GET | Template oficial de cenário v0 |
+
+Configuração: `config/serving.yaml`  
+Auditoria: `logs/serving_audit.db` — consulta via `python scripts/audit_query.py --last 10`
+
+**Frontend React** (`web/`): três abas — Cenário (upload), Forecast operacional, What-if direto.
+
+Documentação API: [`docs/api/`](docs/api/)
+
+---
+
+## 11. Testes e qualidade
 
 ```bash
 pytest tests/ -q -m "not slow"     # unitários (rápido)
 pytest tests/ -m slow -v           # smoke Excel L2
-pytest tests/ --cov=ingest --cov=simulation --cov=acceptance --cov-report=term-missing
+pytest tests/ --cov=ingest --cov=simulation --cov=acceptance --cov=serving --cov-report=term-missing
 ruff check src/ tests/
+cd web && npm test                 # vitest (UI smoke)
 ```
 
 ---
 
-## 11. Estrutura do repositório
+## 12. Estrutura do repositório
 
 ```text
 src/ingest/           Camada 2 — Ingest Engine
 src/simulation/       Camada 3 — Motor de Simulação
 src/acceptance/       Camada 4 — Gate de Aceite
-config/               ingest.yaml, simulation.yaml, acceptance.yaml
+src/serving/          Camada 5 — FastAPI serving + audit
+web/src/              Camada 5 — React SPA
+config/               ingest.yaml, simulation.yaml, acceptance.yaml, serving.yaml
 tests/ingest/         Testes L2
 tests/simulation/     Testes L3
 tests/acceptance/     Testes L4
+tests/serving/        Testes L5 API
 scripts/setup_dev.sh  Bootstrap do venv
+scripts/dev_ui.sh     Dev API + Vite
 data/l2/              Artefatos L2 (gitignored)
-models/               Candidatos L3 + campeão (gitignored)
+models/               Candidatos L3 + campeão + primeira_base (gitignored)
 reports/acceptance/   Relatórios de gate (gitignored)
+logs/serving_audit.db Auditoria call-by-call (gitignored)
 docs/guides/          Guias de desenvolvimento
+docs/api/             Dicionários de dados das APIs
 docs/adr/             Architecture Decision Records
 docs/kb/              Knowledge base normativa
 ```
 
 ---
 
-## 12. Documentação
+## 13. Documentação
 
 | Documento | Conteúdo |
 |-----------|----------|
-| `docs/guides/DEV_ENVIRONMENT.md` | Ambiente, agentes, toolchain |
+| `docs/guides/DEV_ENVIRONMENT.md` | Ambiente, agentes, toolchain, serving |
 | `docs/sketch/MAPA_COMPONENTES_GIFI.md` | Mapa C0–C9 e status das camadas |
+| `docs/api/README.md` | Índice das APIs REST |
+| `docs/api/DICIONARIO_DADOS_FORECAST_PREDICT_TSA.md` | Contrato forecast + predict-tsa |
+| `docs/api/DICIONARIO_DADOS_SERVING_CENARIOS.md` | Contrato simulate + validate + release |
 | `docs/adr/ADR-003-manifest-vs-mlflow.md` | Decisão MLOps / MLflow |
 | `docs/PRD_GIFI_v1.1.md` | Requisitos do produto |
 | `docs/sketch/AGENTES_E_KB_BACKBONE.md` | Roteamento de agentes |
@@ -185,7 +243,7 @@ docs/kb/              Knowledge base normativa
 
 ---
 
-## 13. Agentes especialistas (SDD)
+## 14. Agentes especialistas (SDD)
 
 | Camada | Agente |
 |--------|--------|
@@ -197,11 +255,12 @@ docs/kb/              Knowledge base normativa
 
 ---
 
-## 14. Pendências (Marco 2)
+## 15. Pendências (Marco 2–3)
 
-- Camada 5 — UI React (modo demo com `demo_mode` do acceptance report)
-- Gate A∧B∧C verde — iterar L2/L3 (MAE ~94–97 vs gate 56)
+- Gate A∧B∧C verde — iterar L2/L3 (MAE ~89–97 vs gate 56)
 - Matriz B completa — expandir TC-01…08 além do MVP (TC-03/05 + TM)
+- UI: toggle demo/prod, paridade Zod ↔ Pydantic, exibir `field_origins`/`warnings`
+- Segurança serving: auth, sanitização `run_id`, limite de upload
 - CI pipeline + pre-commit
 
 ---
