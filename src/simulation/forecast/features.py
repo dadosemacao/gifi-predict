@@ -19,7 +19,7 @@ def compute_lags(tsa_history: list[float]) -> dict[str, float]:
 
 def engineer_features(frame: pd.DataFrame) -> pd.DataFrame:
     out = frame[PROCESS_FEATURES + LAG_FEATURES].copy()
-    out["DB_c"] = frame["DB_LAB"] - 490.0
+    out["DB_c"] = frame["DB_SGF"] - 490.0
     out["DB_c2"] = out["DB_c"] ** 2
     out["TPC_crit"] = (frame["TPC"] < 45).astype(float)
     out["TPC_opt"] = ((frame["TPC"] >= 60) & (frame["TPC"] <= 90)).astype(float)
