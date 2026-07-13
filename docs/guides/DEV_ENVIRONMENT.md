@@ -1,52 +1,52 @@
 # Guia de Ambiente de Desenvolvimento — GIFI Predict
 
 **Autor:** Emerson Antônio  
-**Data:** 2026-07-10  
-**Versão:** 1.0
+**Data:** 2026-07-13  
+**Versão:** 1.1
 
 ---
 
 ## 1. Objetivo
 
-Padronizar ambiente Python, dependências, qualidade de código e roteamento de agentes especialistas para as Camadas 2–5 do GIFI.
+Padronizar ambiente Python/Node, dependências, qualidade de código, serving local e roteamento de agentes especialistas para as Camadas 2–5 do GIFI.
 
 ---
 
-## 2. Auditoria (estado em 2026-07-10)
+## 2. Auditoria (estado em 2026-07-13)
 
 ### 2.1 Ambiente virtual
 
-| Item | Estado anterior | Estado alvo |
-|------|-----------------|-------------|
-| `.venv/` no repo | Ausente | Criado via `scripts/setup_dev.sh` |
-| Python em uso | 3.14 (sistema) | **3.12** (pin em `.python-version`) |
-| Instalação | `pip install -e .` global | Editable dentro do venv |
-
-**Risco mitigado:** dependências isoladas, compatibilidade estável com `scikit-learn`.
+| Item | Estado |
+|------|--------|
+| `.venv/` no repo | Criado via `scripts/setup_dev.sh` |
+| Python em uso | **3.12** (pin em `.python-version`) |
+| Instalação | `pip install -e ".[dev]"` dentro do venv |
 
 ### 2.2 Dependências
 
 | Abordagem | Status |
 |-----------|--------|
 | `pyproject.toml` (PEP 621) | Fonte única de verdade |
-| `requirements.txt` | Gerado para CI/Docker legado |
+| `requirements.txt` | Gerado para CI/Docker |
 | `requirements-dev.txt` | Gerado com extras `dev` |
 | `uv.lock` | Lock file para builds reproduzíveis |
+| `web/package.json` | Frontend React/Vite (Node 18+) |
 
 Não mantemos `requirements.txt` manual — sempre regenerar a partir do `pyproject.toml`.
 
-### 2.3 Boas práticas Python
+### 2.3 Boas práticas
 
 | Prática | Status |
 |---------|--------|
-| Layout `src/` | OK — `src/ingest/`, `src/simulation/` |
-| Config externa YAML | OK — `config/ingest.yaml`, `config/simulation.yaml` |
+| Layout `src/` | OK — `ingest/`, `simulation/`, `acceptance/`, `serving/` |
+| Config externa YAML | OK — `config/*.yaml` |
 | Settings tipados (Pydantic) | OK |
-| CLI Typer | OK — `ingest`, `simulate` |
-| Testes pytest + marker `@slow` | OK — 26 testes |
+| CLI Typer | OK — `ingest`, `simulate`, `accept`, `serve` |
+| Testes pytest + marker `@slow` | OK — ~60+ casos Python |
+| Vitest (web) | OK — smoke UI |
 | SDD rastreável | OK — DEFINE → DESIGN → BUILD → SHIP |
-| Linter (ruff) | Adicionado |
-| Cobertura (pytest-cov) | Adicionado |
+| Linter (ruff) | OK |
+| Cobertura (pytest-cov) | OK — inclui `serving` |
 | pre-commit | Débito Marco 2 |
 | CI pipeline | Débito Marco 2 |
 
@@ -56,46 +56,44 @@ Roteamento canônico (`docs/sketch/AGENTES_E_KB_BACKBONE.md`):
 
 | Camada | Agente | Quando invocar |
 |--------|--------|----------------|
-| 1 — Domínio | `gifi-domain-specialist` | Faixas, holdout, Modo A/B, `elo_specs`, template cenário |
+| 1 — Domínio | `gifi-domain-specialist` | Faixas, holdout, Modo A/B, template cenário |
 | 2 — Ingest | `gifi-ingest-engineer` | I1–I5, L2, sinais, quarentena |
-| 3 — Simulação | `gifi-simulation-engineer` | Cascata, EN/RF, champion, Modo A/B |
+| 3 — Simulação | `gifi-simulation-engineer` | Cascata, EN/RF, champion, Modo A/B, 13 preditores |
 | 4 — Aceite | `gifi-acceptance-engineer` | Matrizes A/B/C, gate MAE≤56, release |
-| 5 — UI | `react-frontend-architect` | React, curvas, formulários cenário |
+| 5 — UI | `react-frontend-architect` | React, curvas, formulários, forecast panels |
 | Transversal | `python-developer` | Bootstrap, CLI, refatoração |
 | Transversal | `test-generator` | Cobertura AT/TC |
-| Transversal | `code-reviewer` | Após cada `/build` significativo |
-
-**Regra SDD:** o `/build` pode executar monoliticamente, mas cada fase deve **registrar** qual agente validou decisões normativas (domínio, aceite).
+| Transversal | `code-reviewer` | Após cada build significativo |
 
 ### 2.5 Evolução de modelos (MLflow)
 
-Ver ADR dedicado: [`docs/adr/ADR-003-manifest-vs-mlflow.md`](../adr/ADR-003-manifest-vs-mlflow.md).
+Ver ADR: [`docs/adr/ADR-003-manifest-vs-mlflow.md`](../adr/ADR-003-manifest-vs-mlflow.md).
 
-**Resumo:** MVP usa manifesto JSON + filesystem (`models/candidates/`). MLflow Tracking só no Marco 2, se volume de experimentos justificar.
+**Resumo:** MVP usa manifesto JSON + filesystem (`models/candidates/`, `models/primeira_base/`). MLflow Tracking só no Marco 2, se volume de experimentos justificar.
 
 ---
 
 ## 3. Setup rápido
 
 ```bash
-# Opção A — script automatizado (recomendado)
+# Python
 ./scripts/setup_dev.sh
-
-# Opção B — manual
-python3.12 -m venv .venv
 source .venv/bin/activate
-pip install -U pip
-pip install -e ".[dev]"
+
+# Frontend (primeira vez)
+cd web && npm install && cd ..
 ```
 
 Verificar:
 
 ```bash
-which python    # deve apontar para .venv/bin/python
-python --version  # Python 3.12.x
-pytest tests/ -q
+which python          # .venv/bin/python
+python --version      # 3.12.x
+pytest tests/ -q -m "not slow"
 ingest --help
 simulate --help
+accept --help
+serve --help
 ```
 
 ---
@@ -105,10 +103,13 @@ simulate --help
 ```bash
 source .venv/bin/activate
 
-# Testes
-pytest tests/ -q                    # rápido (sem @slow)
-pytest tests/ -m slow -v            # smoke Excel L2
-pytest tests/ --cov=ingest --cov=simulation --cov-report=term-missing
+# Testes Python
+pytest tests/ -q -m "not slow"
+pytest tests/ -m slow -v
+pytest tests/ --cov=ingest --cov=simulation --cov=acceptance --cov=serving --cov-report=term-missing
+
+# Testes frontend
+cd web && npm test
 
 # Qualidade
 ruff check src/ tests/
@@ -119,13 +120,39 @@ ingest batch "excels/Base de dados QM x Processo 2018-2025_consolidado(Dados).xl
 
 # Simulação (Camada 3)
 simulate train --l2-root data/l2_excel_validation
-simulate evaluate
-simulate infer --cenario-id CEN-001 --mode A
+simulate evaluate --run-id <run_id>
+simulate infer --cenario-id CEN-001 --mode A --run-id <run_id>
+
+# Aceite (Camada 4)
+accept run --run-id <run_id>
+accept report --run-id <run_id>
+
+# Serving (Camada 5)
+serve run --port 8000                    # API + SPA build
+./scripts/dev_ui.sh                      # API :8000 + Vite :5173
+
+# Auditoria
+python scripts/audit_query.py --last 10
+python scripts/audit_query.py --errors
+python scripts/audit_query.py --count-24h
 ```
 
 ---
 
-## 5. Regenerar dependências
+## 5. Desenvolvimento UI
+
+| Modo | Comando | URLs |
+|------|---------|------|
+| Dev (hot reload) | `./scripts/dev_ui.sh` | API `http://127.0.0.1:8000`, Vite `http://127.0.0.1:5173` |
+| Produção local | `cd web && npm run build && cd .. && serve run` | `http://127.0.0.1:8000` (SPA + API) |
+
+Config serving: `config/serving.yaml` — `static_dir: web/dist`, `cors_origins` para Vite dev.
+
+Proxy Vite (`web/vite.config.ts`): `/api` → `:8000`.
+
+---
+
+## 6. Regenerar dependências Python
 
 Quando alterar `pyproject.toml`:
 
@@ -139,53 +166,68 @@ pip install -e ".[dev]"
 
 ---
 
-## 6. Versão Python suportada
+## 7. Versão Python suportada
 
 | Versão | Suporte |
 |--------|---------|
 | 3.12 | **Recomendada** (pin `.python-version`) |
 | 3.11 | Suportada (`requires-python >=3.11`) |
-| 3.14 | Não recomendada (dev local apenas; sklearn pode variar) |
+| 3.14 | Não recomendada (sklearn pode variar) |
 
 ---
 
-## 7. Estrutura de pacotes
+## 8. Estrutura de pacotes
 
 ```text
 src/
   ingest/       Camada 2 — Ingest Engine
   simulation/   Camada 3 — Motor de Simulação
+  acceptance/   Camada 4 — Gate de Aceite
+  serving/      Camada 5 — FastAPI + observability
+web/
+  src/          Camada 5 — React SPA
 config/
   ingest.yaml
   simulation.yaml
+  acceptance.yaml
+  serving.yaml
 tests/
   ingest/
   simulation/
-models/         Candidatos L3 (gitignored)
+  acceptance/
+  serving/
+models/         Candidatos L3 + campeão + primeira_base (gitignored)
 data/l2/        Artefatos L2 (gitignored)
+logs/           Audit DB + logs de treino (gitignored)
+docs/api/       Dicionários REST
 ```
 
 ---
 
-## 8. Checklist onboarding (novo dev)
+## 9. Checklist onboarding (novo dev)
 
 - [ ] Clonar repo
 - [ ] `./scripts/setup_dev.sh`
-- [ ] `pytest tests/ -q` verde
+- [ ] `cd web && npm install`
+- [ ] `pytest tests/ -q -m "not slow"` verde
 - [ ] Ler `docs/PRD_GIFI_v1.1.md`
 - [ ] Ler `docs/sketch/AGENTES_E_KB_BACKBONE.md`
+- [ ] Ler `docs/api/README.md`
+- [ ] Rodar `./scripts/dev_ui.sh` e validar três abas da UI
 - [ ] Rodar ingest batch no Excel de exemplo (opcional)
-- [ ] Rodar `simulate train` com `data/l2_excel_validation` (opcional)
 
 ---
 
-## 9. Débito Marco 2
+## 10. Débito Marco 2–3
 
 - Pipeline CI (GitHub Actions / Azure DevOps)
 - pre-commit hooks (ruff + pytest smoke)
+- Auth e rate limiting no serving
+- Toggle demo/prod na UI (hoje `demo=true` hardcoded no upload)
+- Paridade validação Zod ↔ Pydantic (faixas operacionais)
+- Playwright E2E
 - Pin explícito de cobertura mínima no CI
-- Invocação formal de subagentes por fase SDD
 
 ---
 
-*Documento vivo. Atualizar ao mudar toolchain ou política de agentes.*
+*Documento vivo. Atualizar ao mudar toolchain, serving ou política de agentes.*
