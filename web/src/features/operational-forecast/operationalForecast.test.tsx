@@ -3,6 +3,8 @@ import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 import { AppShell } from "@/components/layout/AppShell"
+import { ForecastResultPanel } from "@/features/operational-forecast/ForecastResultPanel"
+import type { ForecastResponse } from "@/types/forecast"
 
 vi.mock("@/services/releaseApi", () => ({
   fetchReleaseStatus: vi.fn().mockResolvedValue({
@@ -45,5 +47,30 @@ describe("AppShell forecast tab", () => {
     fireEvent.click(screen.getByRole("button", { name: "Forecast operacional" }))
     expect(await screen.findByText(/Forecast operacional \(Produto A\)/)).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /Prever TSA/ })).toBeInTheDocument()
+  })
+})
+
+const FORECAST_RESULT: ForecastResponse = {
+  product: "forecast_operacional",
+  model_id: "run-x",
+  family: "extratrees",
+  anchor_name: "TSA_roll3",
+  tsa_dia: 3400,
+  tsa_dia_lo: 3350,
+  tsa_dia_hi: 3450,
+  anchor: 3390,
+  residual: 10,
+  baselines: { lag1: 3380, roll3: 3390, roll7: 3395 },
+  metrics: { mae_holdout: 67.6, r2_holdout: 0.25, interval_80_coverage: 0.71 },
+  field_origins: { carga_alcalina: "medido", extrativo_at: "estimado" },
+  warnings: ["INGEST_PROXY_EXTR: extrativo estimado"],
+}
+
+describe("ForecastResultPanel", () => {
+  it("mostra origem dos campos e warnings", () => {
+    render(<ForecastResultPanel result={FORECAST_RESULT} />)
+    expect(screen.getByText("Origem dos campos")).toBeInTheDocument()
+    expect(screen.getByText("Estimado (Tier B)")).toBeInTheDocument()
+    expect(screen.getByText(/extrativo estimado/)).toBeInTheDocument()
   })
 })
