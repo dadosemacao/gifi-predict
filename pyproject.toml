@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "gifi-predict"
 version = "0.3.0"
-description = "GIFI Predict — Ingest (L2), Simulation (L3), Acceptance Gate (L4) e Web UI (L5)"
+description = "GIFI Predict — Ingest (L2), Simulation (L3), Acceptance (L4), Serving + Web UI (L5)"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
