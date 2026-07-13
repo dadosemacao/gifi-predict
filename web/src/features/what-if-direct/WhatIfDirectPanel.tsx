@@ -19,13 +19,10 @@ import type { PredictTsaResponse } from "@/types/predictTsa"
 const EXAMPLE: ProcessVariablesValues = {
   carga_alcalina: FORECAST_EXAMPLE.carga_alcalina,
   kappa: FORECAST_EXAMPLE.kappa,
+  prod_alcali_class: FORECAST_EXAMPLE.prod_alcali_class,
   db_sgf: FORECAST_EXAMPLE.db_sgf,
-  db_lab: FORECAST_EXAMPLE.db_lab,
-  secura_pct: FORECAST_EXAMPLE.secura_pct,
   casca_pct: FORECAST_EXAMPLE.casca_pct,
-  extrativo_total: FORECAST_EXAMPLE.extrativo_total,
   extrativo_at: FORECAST_EXAMPLE.extrativo_at,
-  extrativo_sgf: FORECAST_EXAMPLE.extrativo_sgf,
   tpc: FORECAST_EXAMPLE.tpc,
   idade: FORECAST_EXAMPLE.idade,
   vmi_le_021: FORECAST_EXAMPLE.vmi_le_021,
@@ -71,7 +68,7 @@ export function WhatIfDirectPanel() {
         <CardHeader>
           <CardTitle>What-if direto (sem histórico TSA)</CardTitle>
           <p className="text-sm text-slate-600">
-            Informe apenas as 17 variáveis de processo. Não exige histórico de turnos — útil para
+            Informe as 13 variáveis de processo oficiais (Camada 3). Não exige histórico de turnos — útil para
             sliders e testes rápidos. Precisão menor que o forecast operacional.
           </p>
           {statusQuery.data && (

@@ -1,21 +1,20 @@
+import type { FieldOrigins, HoldoutMetrics } from "@/types/forecast"
+
 export type PredictTsaRequest = {
   carga_alcalina: number
   kappa: number
+  prod_alcali_class: number | "baixo" | "normal"
   db_sgf: number
-  db_lab: number
-  secura_pct: number
   casca_pct: number
-  extrativo_total: number
-  extrativo_at: number
-  extrativo_sgf: number
+  extrativo_at?: number
   tpc: number
   idade: number
-  vmi_le_021: number
-  vmi_021_025: number
-  vmi_gt_025: number
-  pct_ab: number
-  pct_c: number
-  pct_dmg: number
+  vmi_le_021?: number
+  vmi_021_025?: number
+  vmi_gt_025?: number
+  pct_ab?: number
+  pct_c?: number
+  pct_dmg?: number
 }
 
 export type PredictTsaResponse = {
@@ -24,18 +23,18 @@ export type PredictTsaResponse = {
   family: string
   tsa_dia: number
   disclaimer: string
-  metrics: {
-    mae_holdout?: number | null
-    r2_holdout?: number | null
-  }
+  metrics: HoldoutMetrics
+  field_origins: FieldOrigins
+  warnings: string[]
 }
 
-export type PredictTsaStatus = {
+export type PredictTsaStatusResponse = {
   run_id: string
   family: string
   product: "what_if_direct"
-  holdout_mae: number | null
-  holdout_r2: number | null
+  holdout_mae: number
+  holdout_r2: number
+  interval_80_coverage: number
   artifact_path: string
   features: string[]
 }

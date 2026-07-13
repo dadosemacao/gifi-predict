@@ -16,20 +16,17 @@ type Props = {
 const PROCESS_FIELDS: Array<{ name: keyof ForecastFormValues; label: string; step?: string }> = [
   { name: "carga_alcalina", label: "Carga alcalina" },
   { name: "kappa", label: "Kappa" },
+  { name: "prod_alcali_class", label: "Prod. álcali (0=baixo, 1=normal)" },
   { name: "db_sgf", label: "DB SGF" },
-  { name: "db_lab", label: "DB Lab" },
-  { name: "secura_pct", label: "% Secura" },
   { name: "casca_pct", label: "% Casca" },
-  { name: "extrativo_total", label: "Extrativo total" },
   { name: "extrativo_at", label: "Extrativo AT" },
-  { name: "extrativo_sgf", label: "Extrativo SGF" },
   { name: "tpc", label: "TPC" },
   { name: "idade", label: "Idade" },
   { name: "vmi_le_021", label: "VMI ≤ 0,21", step: "1" },
   { name: "vmi_021_025", label: "VMI 0,21–0,25", step: "1" },
   { name: "vmi_gt_025", label: "VMI > 0,25", step: "1" },
   { name: "pct_ab", label: "A + B" },
-  { name: "pct_c", label: "C" },
+  { name: "pct_c", label: "C (aux. imputer)" },
   { name: "pct_dmg", label: "D + MG" },
 ]
 
