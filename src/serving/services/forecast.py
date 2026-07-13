@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from serving.policy.forecast_loader import load_forecast_context
-from serving.policy.ingest_config import load_db_proxy_factor
 from serving.schemas import FieldOriginsResponse, ForecastResponse, HoldoutMetricsResponse
 from serving.services.field_origins import build_field_origins
 from serving.services.process_fields import process_dict_from_resolved
@@ -22,13 +21,12 @@ def run_forecast(
     resolved = resolve_process_fields(
         body,
         repo_root=repo_root,
-        db_proxy_factor=load_db_proxy_factor(repo_root),
     )
-    process = process_dict_from_resolved(resolved.values)
+    model_frame = process_dict_from_resolved(resolved.values)
     artifact, ctx = load_forecast_context(
         repo_root, models_root=models_root, run_id=run_id
     )
-    result = predict_tsa(artifact, process, tsa_history)
+    result = predict_tsa(artifact, model_frame, tsa_history)
     return ForecastResponse(
         product="forecast_operacional",
         model_id=ctx.run_id,

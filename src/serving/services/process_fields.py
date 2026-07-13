@@ -1,24 +1,6 @@
 from __future__ import annotations
 
-PROCESS_API_TO_COLUMN: dict[str, str] = {
-    "carga_alcalina": "Carga_Alcalina",
-    "kappa": "Kappa",
-    "db_sgf": "DB_SGF",
-    "db_lab": "DB_LAB",
-    "secura_pct": "Secura_pct",
-    "casca_pct": "Casca_pct",
-    "extrativo_total": "Extrativo_Total",
-    "extrativo_at": "Extrativo_AT",
-    "extrativo_sgf": "Extrativo_SGF",
-    "tpc": "TPC",
-    "idade": "Idade",
-    "vmi_le_021": "vmi_le_021",
-    "vmi_021_025": "vmi_021_025",
-    "vmi_gt_025": "vmi_gt_025",
-    "pct_ab": "pct_AB",
-    "pct_c": "pct_C",
-    "pct_dmg": "pct_DMG",
-}
+from simulation.process_specs import PROCESS_API_TO_COLUMN
 
 
 def process_dict(body: dict) -> dict[str, float]:

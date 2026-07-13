@@ -6,34 +6,17 @@ from typing import Any, Literal
 import pandas as pd
 
 from serving.policy.extr_imputer_loader import load_extr_serving_imputer
-from serving.services.process_fields import PROCESS_API_TO_COLUMN
+from simulation.process_specs import (
+    AUX_API_FIELDS,
+    MANDATORY_API_FIELDS,
+    PROCESS_API_TO_COLUMN,
+    encode_prod_alcali_class,
+)
 
 Origin = Literal["medido", "proxy", "estimado"]
 
-# Campos finais exigidos pelos modelos de forecast / predict-tsa.
 REQUIRED_API_FIELDS: tuple[str, ...] = tuple(PROCESS_API_TO_COLUMN.keys())
-
-# Entradas auxiliares (não vão para o modelo; só para derivação Tier A/B).
-AUX_INPUT_FIELDS: tuple[str, ...] = (
-    "vmi",
-    "pct_a",
-    "pct_b",
-    "pct_d",
-    "pct_mg",
-)
-
-# Obrigatórios no request (sem imputação Tier C).
-MANDATORY_INPUT_FIELDS: tuple[str, ...] = (
-    "carga_alcalina",
-    "kappa",
-    "db_sgf",
-    "secura_pct",
-    "casca_pct",
-    "extrativo_total",
-    "extrativo_sgf",
-    "tpc",
-    "idade",
-)
+AUX_INPUT_FIELDS = AUX_API_FIELDS
 
 
 @dataclass
@@ -47,7 +30,6 @@ def resolve_process_fields(
     body: dict[str, Any],
     *,
     repo_root,
-    db_proxy_factor: float = 0.985,
     enable_tier_b: bool = True,
 ) -> ResolvedProcess:
     """Preenche campos ausentes (Tier A proxy + Tier B estimado)."""
@@ -59,26 +41,19 @@ def resolve_process_fields(
         raw = body.get(key)
         if raw is None:
             continue
-        data[key] = float(raw)
+        if key == "prod_alcali_class":
+            data[key] = encode_prod_alcali_class(raw)
+        else:
+            data[key] = float(raw)
         if key in REQUIRED_API_FIELDS:
             origins[key] = "medido"
 
     _validate_mandatory(data)
 
-    # Tier A — DB lab proxy
-    if data.get("db_lab") is None and data.get("db_sgf") is not None:
-        data["db_lab"] = db_proxy_factor * float(data["db_sgf"])
-        origins["db_lab"] = "proxy"
-        warnings.append("db_lab estimado via proxy DB_SGF × {:.3f}".format(db_proxy_factor))
-
-    # Tier A — mix agregado
     _resolve_pct_ab(data, origins, warnings)
     _resolve_pct_dmg(data, origins, warnings)
-
-    # Tier A — VMI bins
     _resolve_vmi_flags(data, origins, warnings)
 
-    # Tier B — Extrativo AT imputer
     if enable_tier_b and data.get("extrativo_at") is None:
         _estimate_extrativo_at(data, origins, warnings, repo_root=repo_root)
 
@@ -95,7 +70,7 @@ def resolve_process_fields(
 
 
 def _validate_mandatory(data: dict[str, float | None]) -> None:
-    missing = [k for k in MANDATORY_INPUT_FIELDS if data.get(k) is None]
+    missing = [k for k in MANDATORY_API_FIELDS if data.get(k) is None]
     if missing:
         raise ValueError(f"campos obrigatórios ausentes: {', '.join(missing)}")
 

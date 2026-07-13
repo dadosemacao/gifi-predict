@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from simulation.process_specs import encode_prod_alcali_class
 
 
 class HoldoutMetricsResponse(BaseModel):
@@ -58,7 +60,7 @@ class ReleaseStatusResponse(BaseModel):
 
 
 class ProcessVariablesInput(BaseModel):
-    """Entrada parcial — campos ausentes podem ser resolvidos (Tier A/B)."""
+    """Entrada parcial — 13 preditores oficiais + auxiliares de imputação."""
 
     carga_alcalina: float = Field(
         ge=17.5,
@@ -70,20 +72,19 @@ class ProcessVariablesInput(BaseModel):
         le=18.5,
         description="Índice Kappa; faixa oficial aceitável: 15,0–18,5",
     )
+    prod_alcali_class: float = Field(
+        description="Classe produção álcali ordinal: 0=baixo, 1=normal",
+    )
     db_sgf: float = Field(
         ge=465.0,
         le=515.0,
         description="Densidade básica SGF em kg/m³; faixa oficial aceitável: 465–515",
     )
-    db_lab: float | None = None
-    secura_pct: float
     casca_pct: float = Field(
         le=1.5,
         description="Percentual de casca; limite oficial máximo aceitável: 1,5%",
     )
-    extrativo_total: float
     extrativo_at: float | None = None
-    extrativo_sgf: float
     tpc: float = Field(
         ge=45.0,
         description="TPC em dias; valores abaixo de 45 representam madeira verde",
@@ -93,7 +94,6 @@ class ProcessVariablesInput(BaseModel):
     vmi_021_025: float | None = None
     vmi_gt_025: float | None = None
     pct_ab: float | None = None
-    pct_c: float | None = None
     pct_dmg: float | None = None
     vmi: float | None = Field(
         default=None,
@@ -103,6 +103,15 @@ class ProcessVariablesInput(BaseModel):
     pct_b: float | None = None
     pct_d: float | None = None
     pct_mg: float | None = None
+    pct_c: float | None = Field(
+        default=None,
+        description="Auxiliar do imputer Extrativo_AT; não entra no modelo TSA",
+    )
+
+    @field_validator("prod_alcali_class", mode="before")
+    @classmethod
+    def _normalize_prod_alcali_class(cls, value: object) -> float:
+        return encode_prod_alcali_class(value)
 
 
 class FieldOriginsResponse(BaseModel):
@@ -110,20 +119,16 @@ class FieldOriginsResponse(BaseModel):
 
     carga_alcalina: Literal["medido", "proxy", "estimado"] | None = None
     kappa: Literal["medido", "proxy", "estimado"] | None = None
+    prod_alcali_class: Literal["medido", "proxy", "estimado"] | None = None
     db_sgf: Literal["medido", "proxy", "estimado"] | None = None
-    db_lab: Literal["medido", "proxy", "estimado"] | None = None
-    secura_pct: Literal["medido", "proxy", "estimado"] | None = None
     casca_pct: Literal["medido", "proxy", "estimado"] | None = None
-    extrativo_total: Literal["medido", "proxy", "estimado"] | None = None
     extrativo_at: Literal["medido", "proxy", "estimado"] | None = None
-    extrativo_sgf: Literal["medido", "proxy", "estimado"] | None = None
     tpc: Literal["medido", "proxy", "estimado"] | None = None
     idade: Literal["medido", "proxy", "estimado"] | None = None
     vmi_le_021: Literal["medido", "proxy", "estimado"] | None = None
     vmi_021_025: Literal["medido", "proxy", "estimado"] | None = None
     vmi_gt_025: Literal["medido", "proxy", "estimado"] | None = None
     pct_ab: Literal["medido", "proxy", "estimado"] | None = None
-    pct_c: Literal["medido", "proxy", "estimado"] | None = None
     pct_dmg: Literal["medido", "proxy", "estimado"] | None = None
 
 
