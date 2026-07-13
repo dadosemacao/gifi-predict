@@ -222,11 +222,12 @@ docs/api/       Dicionários REST
 
 - Pipeline CI (GitHub Actions / Azure DevOps)
 - pre-commit hooks (ruff + pytest smoke)
-- Auth e rate limiting no serving
-- Toggle demo/prod na UI (hoje `demo=true` hardcoded no upload)
-- Paridade validação Zod ↔ Pydantic (faixas operacionais)
+- Segurança serving — ver [`SECURITY_SERVING_DEBITOS.md`](SECURITY_SERVING_DEBITOS.md) (auth, rate limit, path traversal, upload limits, joblib)
 - Playwright E2E
 - Pin explícito de cobertura mínima no CI
+
+**Fechado em 2026-07-13:** paridade Zod ↔ Pydantic e toggle demo/prod na UI —
+ver [`../api/GAPS_UI_E_VALIDACAO.md`](../api/GAPS_UI_E_VALIDACAO.md).
 
 ---
 

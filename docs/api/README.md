@@ -98,6 +98,8 @@ OpenAPI interativo: `http://127.0.0.1:8000/docs` (Swagger UI automático FastAPI
 |-----------|----------|
 | [DICIONARIO_DADOS_FORECAST_PREDICT_TSA.md](DICIONARIO_DADOS_FORECAST_PREDICT_TSA.md) | Contrato completo forecast + predict-tsa |
 | [DICIONARIO_DADOS_SERVING_CENARIOS.md](DICIONARIO_DADOS_SERVING_CENARIOS.md) | Contrato simulate + validate + release |
+| [GAPS_UI_E_VALIDACAO.md](GAPS_UI_E_VALIDACAO.md) | Gaps de UI/validação e estado de remediação |
+| [../guides/SECURITY_SERVING_DEBITOS.md](../guides/SECURITY_SERVING_DEBITOS.md) | Débitos de segurança do serving |
 | [../guides/DEV_ENVIRONMENT.md](../guides/DEV_ENVIRONMENT.md) | Setup e comandos |
 | [../kb/ml-tabular/patterns/inference-serving.md](../kb/ml-tabular/patterns/inference-serving.md) | Padrão KB Camada 5 |
 

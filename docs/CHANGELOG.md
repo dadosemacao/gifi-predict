@@ -4,6 +4,41 @@
 
 ---
 
+## [0.4.1] — 2026-07-13
+
+### Alterado (Camada 5 — UI produto/UX)
+
+- **Paridade Zod ↔ Pydantic:** `web/src/schemas/processSchema.ts` passa a espelhar as
+  faixas oficiais de `ProcessVariablesInput` (carga 17,5–21,0; kappa 15–18,5;
+  DB_SGF 465–515; casca ≤ 1,5; TPC ≥ 45), falhando cedo antes do 422.
+- **Dedupe:** `PROCESS_FIELDS` unificado em `processSchema.ts`; `forecastSchema.ts`
+  usa `.extend()` do schema de processo (remove duplicação de 13 campos).
+- **Toggle demo/prod:** upload de cenário respeita `release_ok` — `useScenarioSubmit`
+  deixa de forçar `demo=true`; UI trava demonstração quando `release_ok=false`.
+- **Transparência:** novos `FieldOriginsPanel` e `FieldWarnings`
+  (`web/src/components/inference/`) exibem origem (medido/proxy/estimado) e alertas
+  nos painéis de forecast, what-if e cenário; warnings com `aria-live`.
+
+### Corrigido (tipos web)
+
+- Adicionado `ForecastStatus` em `web/src/types/forecast.ts` e alias `PredictTsaStatus`
+  em `predictTsa.ts` — erros de `tsc --noEmit` que quebravam o build.
+
+### Adicionado (Testes web)
+
+- `web/src/schemas/processSchema.test.ts` — faixas Zod (bordas + rejeição).
+- Testes de origins/warnings e toggle demo/prod em
+  `operationalForecast.test.tsx` e `scenarioUpload.test.tsx` (`19 passed`).
+
+### Adicionado (Documentação)
+
+- **`docs/api/GAPS_UI_E_VALIDACAO.md`** — gaps de UI fechados/abertos.
+- **`docs/guides/SECURITY_SERVING_DEBITOS.md`** — débitos de segurança serving
+  (auth, path traversal, upload limits, joblib) documentados, sem implementação.
+- Cross-links em `docs/api/README.md`, dicionário de cenários e `DEV_ENVIRONMENT.md`.
+
+---
+
 ## [0.4.0] — 2026-07-13
 
 ### Documentação (sincronização Camada 5)

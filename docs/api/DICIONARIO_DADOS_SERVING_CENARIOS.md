@@ -87,6 +87,10 @@ Inferência **cascata Elo 1→2→3** sobre planilha de cenário.
 | `false` | `true` | 200 |
 | `false` | `false` | **403** |
 
+> UI (2026-07-13): o upload de cenário respeita `release_ok`. Com `release_ok=false`
+> o toggle "Modo demonstração" fica travado (`demo=true`); com `release_ok=true`
+> o usuário pode enviar `demo=false`. Ver [GAPS_UI_E_VALIDACAO.md](GAPS_UI_E_VALIDACAO.md).
+
 ### 3.3 Response (`InferenceResponse`)
 
 | Campo | Tipo | Descrição |
