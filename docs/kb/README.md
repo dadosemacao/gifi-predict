@@ -1,8 +1,8 @@
 # Bases de Conhecimento do Projeto GIFI
 
 **Autor:** Emerson Antônio  
-**Data:** 2026-07-09  
-**Versão:** 0.2
+**Data:** 2026-07-13  
+**Versão:** 0.3
 
 KBs locais no formato AgentSpec (index / quick-reference / concepts / patterns / specs).
 
@@ -13,6 +13,7 @@ KBs locais no formato AgentSpec (index / quick-reference / concepts / patterns /
 | `frontend-react` | [frontend-react/](frontend-react/) | Camada 5 — UI React+Vite |
 | `gifi-ingest` | [gifi-ingest/](gifi-ingest/) | Ingest Engine I1–I5 |
 | `spreadsheet-connectors` | [spreadsheet-connectors/](spreadsheet-connectors/) | Conectores Excel/TI/upload |
+| APIs REST | [../api/](../api/) | Dicionários forecast, predict-tsa, cenários |
 
 Manifesto: [`_index.yaml`](_index.yaml) · Histórico: [`CHANGELOG.md`](CHANGELOG.md)  
 Registro AgentSpec: [`docs/sketch/AGENTES_E_KB_BACKBONE.md`](../sketch/AGENTES_E_KB_BACKBONE.md)

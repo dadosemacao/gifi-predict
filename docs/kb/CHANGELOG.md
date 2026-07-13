@@ -3,12 +3,28 @@
 **Autor:** Emerson Antônio  
 **Data:** 2026-07-13
 
+## [0.2.6] — 2026-07-13
+
+### Changed
+
+- `ml-tabular/patterns/inference-serving.md` — de stub para implementação shipped (`src/serving/`); endpoints forecast/predict-tsa/audit.
+- `gifi-domain/concepts/operational-bands.md` — contrato API 13 preditores; removidos `secura_pct`, `extrativo_total`, `extrativo_sgf`.
+- `gifi-domain/concepts/platform-layers.md` — Camada 5 implementada (serving + web).
+- `AGENTS.md` v0.2.0 — inventário completo dos 5 agentes GIFI + escalation.
+- `README.md` v0.3 — link para `docs/api/`.
+- `_index.yaml` v0.2.6 — `last_updated: 2026-07-13`.
+
+### Added (repo docs, referenciados pela KB)
+
+- `docs/api/README.md` — índice APIs REST.
+- `docs/api/DICIONARIO_DADOS_SERVING_CENARIOS.md` — validate/simulate/release/template.
+
 ## [0.2.5] — 2026-07-13
 
 ### Changed
 
 - `gifi-domain/concepts/operational-bands.md` — adicionada a cobertura das nove variáveis obrigatórias das APIs Forecast e Predict-TSA, distinguindo intervalos empíricos de zonas normativas.
-- Registradas explicitamente as quatro variáveis sem faixa normativa (`secura_pct`, `extrativo_total`, `extrativo_sgf` e `idade`), sem alterar `specs/operational-ranges.yaml`.
+- Registradas explicitamente as variáveis sem faixa normativa na API (`idade`, `prod_alcali_class`), sem alterar `specs/operational-ranges.yaml`.
 
 ## [0.2.4] — 2026-07-10
 

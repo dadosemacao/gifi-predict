@@ -3,8 +3,8 @@
 # Data: 2026-07-09
 # Escopo: KBs de domínio do repositório (não substitui AgentSpec global)
 
-version: "0.2.4"
-last_updated: "2026-07-10"
+version: "0.2.6"
+last_updated: "2026-07-13"
 location: docs/kb/
 owner: Emerson Antônio
 

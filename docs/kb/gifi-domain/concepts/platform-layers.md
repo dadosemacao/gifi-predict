@@ -18,7 +18,7 @@ Determinismo: mesmas entradas + mesmas regras → mesmas saídas intermediárias
 | 2 | Dados e Representação | Ingestão, Mix A/B/C, qualidade ponderada, dataset versionado | 3–4 |
 | 3 | Motor de Simulação | Cascata Elo 1→2→3; Modos A/B; Baseline+EN+RF | 4–5 |
 | 4 | Confiança e Aceite | Matrizes A∧B∧C; gate de release | 5 |
-| 5 | Superfície de Uso | UI upload, curvas, top-3, relatório | — |
+| 5 | Superfície de Uso | FastAPI serving + UI React; upload, forecast, what-if, audit SQLite | — |
 
 ```text
 [1 Domínio] ──► [2 Dados] ──► [3 Motor] ──► [4 Confiança] ──► [5 Superfície]
@@ -35,7 +35,9 @@ Determinismo: mesmas entradas + mesmas regras → mesmas saídas intermediárias
 | 1 permeia 2–5 | Evita regressão às divergências v1.0 |
 | Release MVP | Camada 4 completa + Camada 5 mínima |
 
-**UI até 31/08:** modo demonstração. Release produtivo exige A∧B∧C.
+**UI até 31/08:** modo demonstração (`demo_mode=true`). Release produtivo exige A∧B∧C.
+
+**Implementado (2026-07-13):** `src/serving/` + `web/` — três produtos (cascata, forecast, what-if direto).
 
 ## Common Mistakes
 
