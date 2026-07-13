@@ -4,6 +4,7 @@
 **Data:** 2026-07-13  
 **Versão:** 1.1  
 **Escopo:** `POST/GET /api/forecast` e `POST/GET /api/predict-tsa`  
+**Relacionado:** [DICIONARIO_DADOS_SERVING_CENARIOS.md](DICIONARIO_DADOS_SERVING_CENARIOS.md) (upload cascata) · [README.md](README.md) (índice)
 **Fonte de verdade (código):** `src/serving/schemas.py`, `src/serving/routes/`, `src/serving/services/`
 
 ---
