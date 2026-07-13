@@ -220,7 +220,27 @@ Interface web funcional simplificada **disponível e homologada até 31 de agost
 | Este resumo | Comunicação executiva e KPIs |
 | `CASOS_TESTE_FUNCIONAIS_GIFI_v1.1.md` | Protocolo de homologação |
 | `sketch/DIVERGENCIAS_E_MITIGACAO_GIFI.md` | Histórico D-01…D-17 |
+| `docs/CHANGELOG.md` | Histórico de versões do código |
+| `docs/api/` | Dicionários das APIs REST (Camada 5) |
+| `docs/sketch/MAPA_COMPONENTES_GIFI.md` | Status C0–C9 e backlog |
 
 ---
 
-*Resumo Técnico v1.1 — reconstruído com integridade a partir do PDF original, da base QM×Processo e do PRD v1.1.*
+## 9. Addendum — estado de implementação (2026-07-13)
+
+Documento normativo v1.1 permanece válido. Status técnico atual:
+
+| Camada | Pacote | Status |
+|--------|--------|--------|
+| 2 — Ingest | `src/ingest/` | Shipped — imputação Extrativo_AT + `extr_origin` |
+| 3 — Simulação | `src/simulation/` | Shipped — 13 preditores TSA (`process_specs.py`) |
+| 4 — Aceite | `src/acceptance/` | Shipped MVP — `release_ok=false` (MAE ~89–97) |
+| 5 — Serving + UI | `src/serving/` + `web/` | Shipped demo — cascata, forecast, what-if, audit SQLite |
+
+**Produtos de inferência (Camada 5):** upload cascata (`/api/simulate`), forecast operacional (`/api/forecast`), what-if direto (`/api/predict-tsa`).
+
+**Próximo marco:** gate A∧B∧C verde + homologação produtiva da UI (`demo=false`).
+
+---
+
+*Resumo Técnico v1.1 — reconstruído com integridade a partir do PDF original, da base QM×Processo e do PRD v1.1. Addendum §9 sincronizado em 2026-07-13.*
