@@ -1,20 +1,51 @@
 import { z } from "zod"
 
+// Faixas oficiais espelhadas de `src/serving/schemas.py` (ProcessVariablesInput)
+// e `docs/kb/gifi-domain/specs/operational-ranges.yaml`. Falhar cedo no cliente
+// evita 422 do backend e mantém a UI alinhada ao SSOT do domínio.
+
+const cargaAlcalina = z.coerce
+  .number()
+  .min(17.5, "Carga alcalina fora da faixa oficial (17,5–21,0 % Na₂O)")
+  .max(21.0, "Carga alcalina fora da faixa oficial (17,5–21,0 % Na₂O)")
+
+const kappa = z.coerce
+  .number()
+  .min(15.0, "Kappa fora da faixa oficial (15,0–18,5)")
+  .max(18.5, "Kappa fora da faixa oficial (15,0–18,5)")
+
+const dbSgf = z.coerce
+  .number()
+  .min(465, "DB SGF fora da faixa oficial (465–515 kg/m³)")
+  .max(515, "DB SGF fora da faixa oficial (465–515 kg/m³)")
+
+const cascaPct = z.coerce
+  .number()
+  .max(1.5, "% Casca acima do limite oficial (máx. 1,5%)")
+
+const tpc = z.coerce.number().min(45, "TPC abaixo de 45 dias (madeira verde)")
+
+const prodAlcaliClass = z.union([z.coerce.number(), z.enum(["baixo", "normal"])])
+
+// `extrativo_at` é opcional no contrato (imputado no serving quando ausente);
+// demais auxiliares (vmi_*, pct_*) também são opcionais e derivados por tier.
+const optionalNumber = z.coerce.number().optional()
+
 export const processVariablesSchema = z.object({
-  carga_alcalina: z.coerce.number(),
-  kappa: z.coerce.number(),
-  prod_alcali_class: z.union([z.coerce.number(), z.enum(["baixo", "normal"])]),
-  db_sgf: z.coerce.number(),
-  casca_pct: z.coerce.number(),
-  extrativo_at: z.coerce.number().optional(),
-  tpc: z.coerce.number(),
+  carga_alcalina: cargaAlcalina,
+  kappa,
+  prod_alcali_class: prodAlcaliClass,
+  db_sgf: dbSgf,
+  casca_pct: cascaPct,
+  extrativo_at: optionalNumber,
+  tpc,
   idade: z.coerce.number(),
-  vmi_le_021: z.coerce.number().optional(),
-  vmi_021_025: z.coerce.number().optional(),
-  vmi_gt_025: z.coerce.number().optional(),
-  pct_ab: z.coerce.number().optional(),
-  pct_c: z.coerce.number().optional(),
-  pct_dmg: z.coerce.number().optional(),
+  vmi_le_021: optionalNumber,
+  vmi_021_025: optionalNumber,
+  vmi_gt_025: optionalNumber,
+  pct_ab: optionalNumber,
+  pct_c: optionalNumber,
+  pct_dmg: optionalNumber,
 })
 
 export type ProcessVariablesValues = z.infer<typeof processVariablesSchema>

@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { processVariablesSchema } from "@/schemas/processSchema"
+
 function parseTsaHistory(text: string): number[] {
   return text
     .split(/[,;\s]+/)
@@ -8,30 +10,20 @@ function parseTsaHistory(text: string): number[] {
     .map((s) => Number(s.replace(",", ".")))
 }
 
-export const forecastFormSchema = z.object({
-  tsa_history_text: z
-    .string()
-    .min(1, "Informe o histórico de TSA")
-    .refine((text) => parseTsaHistory(text).length >= 7, {
-      message: "Informe ao menos 7 valores de TSA (ordem cronológica)",
-    })
-    .refine((text) => parseTsaHistory(text).every((n) => Number.isFinite(n)), {
-      message: "Histórico contém valores inválidos",
-    }),
-  carga_alcalina: z.coerce.number(),
-  kappa: z.coerce.number(),
-  prod_alcali_class: z.union([z.coerce.number(), z.enum(["baixo", "normal"])]),
-  db_sgf: z.coerce.number(),
-  casca_pct: z.coerce.number(),
-  extrativo_at: z.coerce.number().optional(),
-  tpc: z.coerce.number(),
-  idade: z.coerce.number(),
-  vmi_le_021: z.coerce.number().optional(),
-  vmi_021_025: z.coerce.number().optional(),
-  vmi_gt_025: z.coerce.number().optional(),
-  pct_ab: z.coerce.number().optional(),
-  pct_c: z.coerce.number().optional(),
-  pct_dmg: z.coerce.number().optional(),
+const tsaHistoryText = z
+  .string()
+  .min(1, "Informe o histórico de TSA")
+  .refine((text) => parseTsaHistory(text).length >= 7, {
+    message: "Informe ao menos 7 valores de TSA (ordem cronológica)",
+  })
+  .refine((text) => parseTsaHistory(text).every((n) => Number.isFinite(n)), {
+    message: "Histórico contém valores inválidos",
+  })
+
+// Forecast operacional reutiliza as 13 variáveis de processo (mesmas faixas
+// oficiais do backend) e adiciona o histórico TSA obrigatório.
+export const forecastFormSchema = processVariablesSchema.extend({
+  tsa_history_text: tsaHistoryText,
 })
 
 export type ForecastFormValues = z.infer<typeof forecastFormSchema>

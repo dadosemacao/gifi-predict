@@ -3,6 +3,14 @@
 **Autor:** Emerson Antônio  
 **Data:** 2026-07-13
 
+## [0.2.7] — 2026-07-13
+
+### Changed
+
+- `frontend-react/patterns/schema-validation.md` — contrato de faixas oficiais
+  (paridade Zod ↔ `ProcessVariablesInput`); SSOT único em `processSchema.ts`
+  com `forecastFormSchema` via `.extend()`.
+
 ## [0.2.6] — 2026-07-13
 
 ### Changed

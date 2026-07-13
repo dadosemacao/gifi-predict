@@ -1,13 +1,34 @@
 # Schema Validation (Zod + RHF)
 
-> **Purpose**: Validate scenario uploads at the UI boundary  
-> **MCP Validated**: 2026-07-09  
-> **Sources**: Zod docs; align with Camada 1 template
+> **Purpose**: Validate scenario uploads and process forms at the UI boundary  
+> **MCP Validated**: 2026-07-09 · **Atualizado**: 2026-07-13  
+> **Sources**: Zod docs; align with Camada 1 template + `src/serving/schemas.py`
 
 ## When to Use
 
 - Scenario Excel/CSV mapped to row objects
 - Mode A/B column presence checks (mirror domain; backend still authoritative)
+- Forecast / what-if process forms — espelhar faixas oficiais de `ProcessVariablesInput`
+
+## Paridade de faixas (SSOT)
+
+Espelhar `ProcessVariablesInput` (`src/serving/schemas.py`) e
+`docs/kb/gifi-domain/specs/operational-ranges.yaml`. Falhar cedo no cliente
+evita 422 e mantém a UI alinhada ao domínio. Backend permanece autoritativo.
+
+| Campo | Faixa Zod (min/max) |
+|-------|---------------------|
+| `carga_alcalina` | 17,5 – 21,0 |
+| `kappa` | 15,0 – 18,5 |
+| `db_sgf` | 465 – 515 |
+| `casca_pct` | ≤ 1,5 |
+| `tpc` | ≥ 45 |
+| `prod_alcali_class` | 0/1 ou `baixo`/`normal` |
+| `extrativo_at`, `vmi_*`, `pct_*` | opcionais (imputados por tier no serving) |
+
+SSOT único no front: `web/src/schemas/processSchema.ts`
+(`processVariablesSchema` + `PROCESS_FIELDS`); `forecastFormSchema` faz
+`.extend()` para adicionar `tsa_history_text`.
 
 ## Implementation
 
