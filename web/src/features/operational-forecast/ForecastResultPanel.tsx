@@ -1,3 +1,5 @@
+import { FieldOriginsPanel } from "@/components/inference/FieldOriginsPanel"
+import { FieldWarnings } from "@/components/inference/FieldWarnings"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { ForecastResponse, ForecastStatus } from "@/types/forecast"
 
@@ -35,6 +37,9 @@ export function ForecastResultPanel({ result }: Props) {
             <Metric label="Âncora (roll3)" value={fmt(result.anchor)} />
             <Metric label="Resíduo ML" value={fmt(result.residual)} />
           </div>
+
+          <FieldOriginsPanel fieldOrigins={result.field_origins} />
+          <FieldWarnings warnings={result.warnings} />
         </CardContent>
       </Card>
 

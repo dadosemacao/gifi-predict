@@ -28,7 +28,7 @@ export type PredictTsaResponse = {
   warnings: string[]
 }
 
-export type PredictTsaStatusResponse = {
+export type PredictTsaStatus = {
   run_id: string
   family: string
   product: "what_if_direct"
@@ -38,3 +38,5 @@ export type PredictTsaStatusResponse = {
   artifact_path: string
   features: string[]
 }
+
+export type PredictTsaStatusResponse = PredictTsaStatus

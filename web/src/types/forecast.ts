@@ -38,6 +38,17 @@ export type ForecastResponse = {
   warnings: string[]
 }
 
+export type ForecastStatus = {
+  run_id: string
+  family: string
+  anchor: string
+  product: "forecast_operacional"
+  holdout_mae: number
+  holdout_r2: number
+  interval_80_coverage: number
+  artifact_path: string
+}
+
 export type ForecastRequest = {
   tsa_history: number[]
   carga_alcalina: number

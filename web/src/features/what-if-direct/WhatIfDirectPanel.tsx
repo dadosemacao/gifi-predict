@@ -3,6 +3,8 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 
+import { FieldOriginsPanel } from "@/components/inference/FieldOriginsPanel"
+import { FieldWarnings } from "@/components/inference/FieldWarnings"
 import { Alert } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -124,6 +126,8 @@ export function WhatIfDirectPanel() {
             <p className="text-sm text-slate-600">
               Família: {result.family} · run_id: {result.model_id}
             </p>
+            <FieldOriginsPanel fieldOrigins={result.field_origins} />
+            <FieldWarnings warnings={result.warnings} />
           </CardContent>
         </Card>
       )}
