@@ -4,7 +4,7 @@ Autor: Emerson Antônio
 Data: 2026-07-13
 
 Y = TSA_dia
-X = 17 features de negócio (RELATORIO §3)
+X = 13 preditores oficiais Camada 3 (process_specs)
 
 Pipeline:
 1. Compara famílias do projeto via TimeSeriesSplit + MAE
@@ -40,27 +40,9 @@ from simulation.models.grid_search import (
     _param_grid,
     fit_elo3_with_grid_search,
 )
+from simulation.process_specs import PROCESS_COLUMNS, TARGET
 
-TARGET = "TSA_dia"
-FEATURES = [
-    "Carga_Alcalina",
-    "Kappa",
-    "DB_SGF",
-    "DB_LAB",
-    "Secura_pct",
-    "Casca_pct",
-    "Extrativo_Total",
-    "Extrativo_AT",
-    "Extrativo_SGF",
-    "TPC",
-    "Idade",
-    "vmi_le_021",
-    "vmi_021_025",
-    "vmi_gt_025",
-    "pct_AB",
-    "pct_C",
-    "pct_DMG",
-]
+FEATURES = list(PROCESS_COLUMNS)
 FAMILIES = [
     "baseline",
     "elasticnet",
@@ -78,30 +60,10 @@ HOLDOUT_FRACTION = 0.2
 
 
 def _load_ordered_frame() -> pd.DataFrame:
-    """Carrega primeira_base.csv validando equivalência com L2 ordenado."""
+    """Carrega base/primeira_base.csv (13 preditores + TSA_dia, ordem temporal)."""
     csv_path = REPO / "base" / "primeira_base.csv"
-    csv_df = pd.read_csv(csv_path)
     cols = FEATURES + [TARGET]
-
-    pointer_path = REPO / "data" / "l2_excel_validation" / "current.json.previous"
-    if pointer_path.exists():
-        pointer = json.loads(pointer_path.read_text(encoding="utf-8"))
-        train = pd.read_parquet(pointer["paths"]["train_features"])
-        holdout = pd.read_parquet(pointer["paths"]["holdout_features"])
-        l2 = pd.concat([train, holdout], ignore_index=True)
-        l2f = (
-            l2.loc[l2[cols].notna().all(axis=1), cols + ["data_processo", "turno"]]
-            .sort_values(["data_processo", "turno"])
-            .reset_index(drop=True)
-        )
-        if len(l2f) != len(csv_df):
-            print(
-                f"Aviso: CSV ({len(csv_df)}) != L2 filtrado ({len(l2f)}); "
-                "usando L2 ordenado temporalmente."
-            )
-        return l2f[cols]
-
-    return csv_df[cols].reset_index(drop=True)
+    return pd.read_csv(csv_path)[cols].reset_index(drop=True)
 
 
 def _temporal_split(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:

@@ -46,29 +46,9 @@ from simulation.models.grid_search import (
     _base_pipeline,
     fit_elo3_with_grid_search,
 )
+from simulation.forecast.specs import LAG_FEATURES, PROCESS_FEATURES, TARGET
 
-TARGET = "TSA_dia"
 ANCHOR = "TSA_roll3"
-PROCESS_FEATURES = [
-    "Carga_Alcalina",
-    "Kappa",
-    "DB_SGF",
-    "DB_LAB",
-    "Secura_pct",
-    "Casca_pct",
-    "Extrativo_Total",
-    "Extrativo_AT",
-    "Extrativo_SGF",
-    "TPC",
-    "Idade",
-    "vmi_le_021",
-    "vmi_021_025",
-    "vmi_gt_025",
-    "pct_AB",
-    "pct_C",
-    "pct_DMG",
-]
-LAG_FEATURES = ["TSA_lag1", "TSA_roll3", "TSA_roll7"]
 FAMILIES = [
     "randomforest",
     "extratrees",
@@ -84,16 +64,7 @@ INTERVAL_Q = (0.10, 0.90)
 
 def _load_ordered_frame() -> pd.DataFrame:
     cols = PROCESS_FEATURES + [TARGET]
-    pointer_path = REPO / "data" / "l2_excel_validation" / "current.json.previous"
-    pointer = json.loads(pointer_path.read_text(encoding="utf-8"))
-    train = pd.read_parquet(pointer["paths"]["train_features"])
-    holdout = pd.read_parquet(pointer["paths"]["holdout_features"])
-    l2 = pd.concat([train, holdout], ignore_index=True)
-    frame = (
-        l2.loc[l2[cols].notna().all(axis=1), cols + ["data_processo", "turno"]]
-        .sort_values(["data_processo", "turno"])
-        .reset_index(drop=True)
-    )
+    frame = pd.read_csv(REPO / "base" / "primeira_base.csv")[cols].reset_index(drop=True)
     frame[TARGET] = pd.to_numeric(frame[TARGET], errors="coerce")
     frame["TSA_lag1"] = frame[TARGET].shift(1)
     frame["TSA_roll3"] = frame[TARGET].shift(1).rolling(3, min_periods=3).mean()
@@ -104,7 +75,7 @@ def _load_ordered_frame() -> pd.DataFrame:
 
 def _engineer_features(frame: pd.DataFrame) -> pd.DataFrame:
     out = frame[PROCESS_FEATURES + LAG_FEATURES].copy()
-    out["DB_c"] = frame["DB_LAB"] - 490.0
+    out["DB_c"] = frame["DB_SGF"] - 490.0
     out["DB_c2"] = out["DB_c"] ** 2
     out["TPC_crit"] = (frame["TPC"] < 45).astype(float)
     out["TPC_opt"] = ((frame["TPC"] >= 60) & (frame["TPC"] <= 90)).astype(float)

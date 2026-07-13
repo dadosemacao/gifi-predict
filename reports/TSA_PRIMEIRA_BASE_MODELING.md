@@ -2,12 +2,12 @@
 
 **Autor:** Emerson Antônio
 **Data:** 2026-07-13
-**Base:** `base/primeira_base.csv` (1902 registros, 100% completos)
+**Base:** `base/primeira_base.csv` (2012 registros, 100% completos)
 
 ## Definição
 
 - **Y:** `TSA_dia`
-- **X:** 17 features de negócio
+- **X:** 13 features de negócio
 
 ## Validação
 
@@ -18,30 +18,30 @@
 
 | Família | CV MAE |
 |---------|--------|
-| baseline | 101.25 |
-| catboost | 101.86 |
-| randomforest | 103.04 |
-| extratrees | 103.75 |
-| xgboost | 106.96 |
-| histgradientboosting | 108.82 |
-| elasticnet | 109.15 |
-| ridge | 110.14 |
-| lasso | 110.18 |
-| lightgbm | 112.49 |
+| lasso | 87.04 |
+| ridge | 87.11 |
+| elasticnet | 87.30 |
+| extratrees | 89.29 |
+| randomforest | 92.25 |
+| catboost | 92.67 |
+| histgradientboosting | 99.96 |
+| xgboost | 102.91 |
+| baseline | 102.97 |
+| lightgbm | 103.34 |
 
-## Campeão: `catboost`
+## Campeão: `lasso`
 
-**GridSearch best_params:** `{'model__depth': 10, 'model__iterations': 200, 'model__l2_leaf_reg': 10.0, 'model__learning_rate': 0.03}`
+**GridSearch best_params:** `{'model__alpha': 1.0}`
 
-**CV MAE (GridSearch):** 93.87
+**CV MAE (GridSearch):** 86.64
 
 ## Holdout temporal
 
 | Métrica | Valor |
 |---------|-------|
-| MAE | 103.69 |
-| RMSE | 130.14 |
-| R² | -0.092 |
+| MAE | 88.66 |
+| RMSE | 120.12 |
+| R² | 0.029 |
 
 ## Gráfico
 
@@ -49,4 +49,4 @@
 
 ## Artefato
 
-`/Users/emerson.antonio/Developar/keyrus/veracel/gifi-predict/models/primeira_base/2026-07-13T102553Z/tsa_catboost.joblib`
+`/Users/emerson.antonio/Developar/keyrus/veracel/gifi-predict/models/primeira_base/2026-07-13T143520Z/tsa_lasso.joblib`

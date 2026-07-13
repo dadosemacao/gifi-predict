@@ -1,87 +1,80 @@
 {
-  "run_id": "2026-07-13T102553Z",
+  "run_id": "2026-07-13T143520Z",
   "target": "TSA_dia",
   "features": [
     "Carga_Alcalina",
     "Kappa",
+    "Prod_alcali_class",
     "DB_SGF",
-    "DB_LAB",
-    "Secura_pct",
-    "Casca_pct",
-    "Extrativo_Total",
-    "Extrativo_AT",
-    "Extrativo_SGF",
-    "TPC",
     "Idade",
+    "TPC",
+    "pct_AB",
+    "pct_DMG",
     "vmi_le_021",
     "vmi_021_025",
     "vmi_gt_025",
-    "pct_AB",
-    "pct_C",
-    "pct_DMG"
+    "Extrativo_AT",
+    "Casca_pct"
   ],
-  "n_total": 1902,
-  "n_train": 1521,
-  "n_holdout": 381,
+  "n_total": 2012,
+  "n_train": 1609,
+  "n_holdout": 403,
   "cv_ranking": [
     {
-      "family": "baseline",
-      "cv_mae": 101.2488802287275
-    },
-    {
-      "family": "catboost",
-      "cv_mae": 101.86279111097858
-    },
-    {
-      "family": "randomforest",
-      "cv_mae": 103.04429018640243
-    },
-    {
-      "family": "extratrees",
-      "cv_mae": 103.75110719004098
-    },
-    {
-      "family": "xgboost",
-      "cv_mae": 106.9551290446037
-    },
-    {
-      "family": "histgradientboosting",
-      "cv_mae": 108.82043799840854
-    },
-    {
-      "family": "elasticnet",
-      "cv_mae": 109.15107850972772
+      "family": "lasso",
+      "cv_mae": 87.04379216339437
     },
     {
       "family": "ridge",
-      "cv_mae": 110.14220829394858
+      "cv_mae": 87.1074787250989
     },
     {
-      "family": "lasso",
-      "cv_mae": 110.1830204443473
+      "family": "elasticnet",
+      "cv_mae": 87.30331838818908
+    },
+    {
+      "family": "extratrees",
+      "cv_mae": 89.29266756567057
+    },
+    {
+      "family": "randomforest",
+      "cv_mae": 92.24561754197441
+    },
+    {
+      "family": "catboost",
+      "cv_mae": 92.67361753601226
+    },
+    {
+      "family": "histgradientboosting",
+      "cv_mae": 99.95682119650671
+    },
+    {
+      "family": "xgboost",
+      "cv_mae": 102.90718348398153
+    },
+    {
+      "family": "baseline",
+      "cv_mae": 102.97194812111245
     },
     {
       "family": "lightgbm",
-      "cv_mae": 112.4935116192272
+      "cv_mae": 103.34182933171124
     }
   ],
-  "champion": "catboost",
+  "champion": "lasso",
   "grid_search": {
-    "family": "catboost",
+    "family": "lasso",
     "best_params": {
-      "model__depth": 10,
-      "model__iterations": 200,
-      "model__l2_leaf_reg": 10.0,
-      "model__learning_rate": 0.03
+      "model__alpha": 1.0
     },
-    "cv_mae": 93.87004679846024,
+    "cv_mae": 86.63605275936736,
     "cv_folds": 5
   },
   "holdout_metrics": {
-    "mae": 103.69270177445952,
-    "rmse": 130.14053665544367,
-    "r2": -0.09189265462278362
+    "mae": 88.65855596380378,
+    "rmse": 120.12131083791084,
+    "r2": 0.029187271337431597
   },
-  "model_path": "/Users/emerson.antonio/Developar/keyrus/veracel/gifi-predict/models/primeira_base/2026-07-13T102553Z/tsa_catboost.joblib",
+  "model_path": "/Users/emerson.antonio/Developar/keyrus/veracel/gifi-predict/models/primeira_base/2026-07-13T143520Z/tsa_lasso.joblib",
   "graphic_path": "/Users/emerson.antonio/Developar/keyrus/veracel/gifi-predict/graphics/tsa_primeira_base_real_vs_pred.png"
 }
