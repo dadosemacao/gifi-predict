@@ -1,8 +1,8 @@
 # Mapa de Componentes e Dependências — Projeto GIFI
 
 **Autor:** Emerson Antônio  
-**Data:** 2026-07-10  
-**Versão:** 1.1  
+**Data:** 2026-07-13  
+**Versão:** 1.2  
 **Base normativa:** `PRD_GIFI_v1.1.md`, `RESUMO_TECNICO_GIFI_v1.1.md`, `CASOS_TESTE_FUNCIONAIS_GIFI_v1.1.md`, `sketch/REFERENCIA_FAIXAS_OPERACIONAIS.md`  
 **Objetivo:** visão única para decompor o sistema em tarefas de construção.
 
@@ -28,7 +28,7 @@ L4  Produto (interface + relatório de desvios)
 
 Diagrama: `graphics/mapa_componentes_gifi.png`
 
-### 2.2 Mapeamento para backbone + código (2026-07-10)
+### 2.2 Mapeamento para backbone + código (2026-07-13)
 
 | Backbone | Pacote / CLI | Componentes C* | Status |
 |----------|--------------|----------------|--------|
@@ -36,11 +36,11 @@ Diagrama: `graphics/mapa_componentes_gifi.png`
 | Camada 2 — Ingest | `src/ingest/` · `ingest` | C1 + C2 | **Shipped** |
 | Camada 3 — Simulação | `src/simulation/` · `simulate` | C3 + C4 + C5 | **Shipped** |
 | Camada 4 — Aceite | `src/acceptance/` · `accept` | C6 (+ C7 parcial) | **Shipped (MVP)** |
-| Camada 5 — UI | (a construir) | C8 | **Pendente** |
+| Camada 5 — Serving + UI | `src/serving/` · `serve` + `web/` | C8 (+ C7 parcial) | **Shipped (demo)** |
 | Marco 4 | (a construir) | C9 | **Pendente** |
 | Fora MVP | — | C3b, NN | **NO-GO / opcional** |
 
-Referências SDD arquivadas: `.claude/sdd/archive/{INGEST_ENGINE,SIMULATION_ENGINE,ACCEPTANCE_GATE}/`
+Referências SDD arquivadas: `.claude/sdd/archive/{INGEST_ENGINE,SIMULATION_ENGINE,ACCEPTANCE_GATE,WEB_UI,SERVING_SQLITE_AUDIT}/`
 
 ---
 
@@ -174,12 +174,14 @@ Referências SDD arquivadas: `.claude/sdd/archive/{INGEST_ENGINE,SIMULATION_ENGI
 
 | Item | Conteúdo |
 |---|---|
-| **O que é** | Upload de planilha → execução Modo A/B → curvas TSA + Carga + Extrativos + top-3 |
+| **O que é** | SPA React + FastAPI serving: upload cenário Modo A/B, forecast operacional, what-if direto |
 | **Depende de** | C5 + C6 (mínimo funcional demo) + C7 (homologação completa) |
-| **Integração prevista** | `acceptance_report.json` (`demo_mode`), inferência L3 (`--run-id`), cenários L2 |
-| **Prazo** | Homologável até **31/08/2026** |
+| **Implementação** | `src/serving/` (API) + `web/src/` (React/Vite); CLI `serve run` |
+| **Endpoints** | `/api/simulate`, `/api/scenario/validate`, `/api/forecast`, `/api/predict-tsa`, `/api/release-status` |
+| **Integração** | `acceptance_report.json` (`demo_mode`), champion L3/L4, audit SQLite |
+| **Prazo homologação** | **31/08/2026** (modo demo enquanto `release_ok=false`) |
 | **Fora** | Retreino na UI, cloud, Caminho da Volta |
-| **Status** | **Pendente — próximo pacote (Camada 5)** |
+| **Status** | **Shipped (MVP demo)** — shipped 2026-07-10; extensões forecast/audit 2026-07-13 |
 
 ---
 
@@ -226,8 +228,8 @@ C_raw ────┘         [L2 ingest]            ├──► C3b (NO-GO MVP
 | **3** | C2 Features Mix A/B/C | Marco 1 | ✅ Integrado I3 |
 | **4** | C3 + C4 + C5 Cascata | Marco 2 | ✅ Shipped (`simulate`) |
 | **5** | C6 Matrizes A/B/C | Marco 2 | ✅ Shipped MVP (`accept`) |
-| **6** | C8 UI mínima (upload + TSA) | Marco 2 (31/08) | ⏭️ Próximo |
-| **7** | C7 UI + relatório detratores | Marco 2–3 | 🔶 Parcial (L3+L4) |
+| **6** | C8 UI mínima (upload + TSA) | Marco 2 (31/08) | ✅ Shipped (`serve` + `web/`) |
+| **7** | C7 UI + relatório detratores | Marco 2–3 | 🔶 Parcial (L3+L4+panel) |
 | **8** | Gate A∧B∧C verde | Marco 2–3 | ⚠️ MAE > 56; iterar L2/L3 |
 | **9** | C6 Matriz B completa (TC-01…08) | Marco 3 | ⚠️ Débito Marco 2 |
 | **10** | C3b Casca / NN | Marco 3+ | Fora MVP |
@@ -252,7 +254,7 @@ C_raw ────┘         [L2 ingest]            ├──► C3b (NO-GO MVP
 
 1. **MAE ≤ 56** — holdout ~94–97; roadmap em `docs/analysis/DIAGNOSTICO_MAE_ELO3.md`.
 2. **Matriz B completa** — MVP cobre TC-03/05 + TM; expandir TC-01…02, TC-04, TC-06…08.
-3. **C8 Interface web** — upload, curvas, badge `demo_mode`, integração `--run-id`.
+3. **C8 homologação produtiva** — bind `demo=false` na UI, paridade validação, auth serving.
 
 ### Qualidade de dados (impacta modelagem, não o backbone)
 
@@ -286,10 +288,10 @@ C_raw ────┘         [L2 ingest]            ├──► C3b (NO-GO MVP
 | **P1 — Dados** | C1 + C2 | Dataset + features auditáveis | ✅ Shipped |
 | **P2 — Cascata** | C3 + C4 + C5 | Modelos encadeados + candidatos L3 | ✅ Shipped |
 | **P3 — Aceite** | C6 + C7 | Matrizes A/B/C + explicabilidade | ✅ MVP (`accept`); gate verde pendente |
-| **P4 — Produto** | C8 + template | Simulador homologável | ⏭️ Próximo |
+| **P4 — Produto** | C8 + template | Simulador homologável | ✅ MVP demo; homologação prod pendente |
 | **P5 — Fechamento** | C9 (+ C3b/NN se go) | Relatório e encerramento | Pendente |
 
-**Próximo passo natural:** **P4 — Camada 5 (UI demo)** consumindo `acceptance_report.json` + inferência L3, em paralelo opcional à iteração MAE (P2/P3).
+**Próximo passo natural:** iterar MAE (P2/P3) para `release_ok=true` + homologação produtiva C8 (auth, demo/prod UI).
 
 ---
 
@@ -301,8 +303,10 @@ C_raw ────┘         [L2 ingest]            ├──► C3b (NO-GO MVP
 | `simulate` | `simulate train --l2-root data/l2` | `models/candidates/{run_id}/` |
 | `simulate` | `simulate infer --cenario-id X --mode A --run-id {id}` | predição Modo A/B |
 | `accept` | `accept run --run-id {id}` | `reports/acceptance/{run_id}/acceptance_report.json` |
+| `serve` | `serve run --port 8000` | API + SPA (`web/dist`) |
+| — | `python scripts/audit_query.py --last 10` | consulta `logs/serving_audit.db` |
 
-Versão do pacote: **0.3.0** (`pyproject.toml`). Histórico: `docs/CHANGELOG.md`.
+Versão do pacote: **0.4.0** (docs); código `pyproject.toml` **0.3.0** até bump formal. Histórico: `docs/CHANGELOG.md`.
 
 ---
 
