@@ -55,6 +55,7 @@ def run_train_pipeline(settings: SimulationSettings) -> dict[str, Any]:
         min_train_rows=settings.min_train_rows,
         holdout=bundle.holdout,
         tuning=tuning,
+        training_mode=settings.training_mode,
     )
     holdout_eval = bundle.holdout
     if tuning.enabled and tuning.elo3_cascade_fill:
@@ -71,6 +72,7 @@ def run_train_pipeline(settings: SimulationSettings) -> dict[str, Any]:
         db_proxy_factor=settings.db_proxy_factor,
         select_by_cascade=tuning.enabled and tuning.select_by_cascade,
         elo3_families=tuning.elo3_families if tuning.enabled else None,
+        training_mode=settings.training_mode,
     )
     metrics = evaluate_holdout(
         fitted,
@@ -80,12 +82,19 @@ def run_train_pipeline(settings: SimulationSettings) -> dict[str, Any]:
         feature_cols,
         db_proxy_factor=settings.db_proxy_factor,
         holdout_elo3=holdout_eval if tuning.enabled and tuning.elo3_cascade_fill else None,
+        training_mode=settings.training_mode,
     )
     metrics["tuning"] = tuning_meta
 
     champion_pipes = {elo: fitted[elo][champions[elo]] for elo in champions}
     explainability = extract_explainability(fitted, champions, feature_cols)
-    release_ok = metrics["mae_tsa_cascade"] <= settings.mae_limit_report
+    mae_value = metrics.get(
+        "mae_primary",
+        metrics["mae_tsa_cascade"]
+        if settings.mae_metric == "cascade"
+        else metrics["mae_tsa_isolated"],
+    )
+    release_ok = mae_value <= settings.mae_limit_report
 
     manifest_base = {
         "run_id": run_id,

@@ -222,7 +222,12 @@ data/l2_excel_validation/
 logs/ingest/
 logs/simulation/
 logs/acceptance/
+logs/serving_audit.db
+logs/serving_audit.db-wal
+logs/serving_audit.db-shm
 reports/acceptance/
 /models/
 catboost_info/
 **/.DS_Store
+node_modules/
+web/dist/

@@ -5,6 +5,9 @@ models_root: "models"
 logs_root: "logs/simulation"
 expected_schema_version: "1.0.0"
 random_state: 42
+# direct_tsa: modelo único TSA_dia com features observadas (sem cascata Elo1/2)
+training_mode: direct_tsa
+mae_metric: isolated
 families: [baseline, elasticnet, randomforest]
 holdout:
   start: "2025-05-01"
@@ -28,9 +31,9 @@ tuning:
   grid_search_pool: train
   training_pool: train
   train_fraction: 0.8
-  elo3_oof_stack: true
+  elo3_oof_stack: false
   elo3_cascade_fill: false
-  select_by_cascade: true
+  select_by_cascade: false
   n_jobs: -1
   fast: false
 io:
@@ -65,16 +68,23 @@ elo_specs:
   elo3:
     target: TSA_dia
     features:
-      - pct_ABC
-      - pct_CDMG
-      - mix_entropy
-      - mix_hhi
-      - DB_LAB
-      - Extrativo_AT
       - Carga_Alcalina
-      - TPC
-      - VMI
-      - Volume_m3
       - Kappa
+      - Prod_alcali_class
+      - DB_SGF
+      - Idade
+      - TPC
+      - pct_AB
+      - pct_DMG
+      - vmi_le_021
+      - vmi_021_025
+      - vmi_gt_025
+      - Extrativo_AT
+      - Casca_pct
+    column_aliases:
+      Prod_alcali_class: "Prod alcali_class"
+    categorical_features:
+      - Prod_alcali_class
     optional_features:
+      - Extrativo_AT
       - Casca_pct

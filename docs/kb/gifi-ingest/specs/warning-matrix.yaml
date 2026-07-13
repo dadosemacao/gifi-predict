@@ -20,6 +20,14 @@ matrix:
       else: block
     inference: admit
 
+  INGEST_PROXY_EXTR:
+    train: admit  # flag obrigatória (extr_origin=estimado)
+    holdout:
+      admit_if:
+        max_estimated_row_ratio: 0.20
+      else: block
+    inference: admit
+
   INGEST_SPARSE_LAB:
     train: admit
     holdout:

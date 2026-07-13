@@ -31,7 +31,22 @@ def select_champions(
     db_proxy_factor: float = 0.985,
     select_by_cascade: bool = False,
     elo3_families: tuple[str, ...] | None = None,
+    training_mode: str = "cascade",
 ) -> dict[str, str]:
+    if training_mode == "direct_tsa":
+        elo3_pipes = fitted.get("elo3", {})
+        candidates = _candidate_families(elo3_pipes, elo3_families or families)
+        X, y, _, _ = build_matrix(holdout, "elo3", specs, enforce_min_rows=False)
+        best_family = candidates[0]
+        best_mae = float("inf")
+        for family in candidates:
+            preds = elo3_pipes[family].predict(X)
+            score = mae(y.to_numpy(), preds)
+            if score < best_mae:
+                best_mae = score
+                best_family = family
+        return {"elo3": best_family}
+
     if select_by_cascade and feature_cols is not None:
         return _select_by_cascade(
             fitted,

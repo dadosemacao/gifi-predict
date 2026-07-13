@@ -4,6 +4,71 @@
 
 ---
 
+## [Não versionado] — 2026-07-13
+
+### Adicionado (Serving — SQLite Audit)
+
+- **Auditoria call-by-call** de todos os endpoints `/api/*` via middleware ASGI
+  (`src/serving/observability/`): captura request/response, duração, erros 4xx/5xx,
+  `field_origins`, `metrics`, hash de uploads multipart.
+- **SSOT SQLite** em `logs/serving_audit.db` (WAL, migração `database/serving_audit/001_init.sql`).
+- Config `audit_enabled`, `audit_db_path`, `audit_max_body_bytes` em `config/serving.yaml`.
+- CLI `scripts/audit_query.py` (`--last`, `--errors`, `--count-24h`).
+- Testes AT-001..AT-007 em `tests/serving/test_audit_*.py`.
+
+### Adicionado (Serving — Dicionário de dados API)
+
+- **`docs/api/DICIONARIO_DADOS_FORECAST_PREDICT_TSA.md`:** dicionário completo de
+  `/api/forecast` e `/api/predict-tsa` (request, response, status, tiers de imputação,
+  faixas empíricas, exemplos JSON e códigos HTTP).
+
+### Alterado (Serving — Validação de entrada)
+
+- `/api/forecast` e `/api/predict-tsa` agora retornam HTTP `422` quando os campos
+  obrigatórios cobertos pelo SSOT oficial estão fora das faixas: Carga Alcalina
+  `[17,5; 21,0]`, Kappa `[15; 18,5]`, DB_SGF `[465; 515]` kg/m³,
+  Casca `≤ 1,5%` e TPC `≥ 45` dias.
+- `secura_pct`, `extrativo_total`, `extrativo_sgf` e `idade` permanecem
+  obrigatórios, mas sem limite rígido por não possuírem faixa normativa.
+- Testes de limites inclusivos, rejeição e HTTP `422` em
+  `tests/serving/test_process_input_ranges.py`.
+
+---
+
+## [Não versionado] — 2026-07-13
+
+### Adicionado (Camada 2 — Ingest)
+
+- **Imputação de `Extrativo_AT` (Elo 1) no Ingest:** `impute_extrativo_at()` em
+  `src/ingest/transform/imputation.py` treina um RandomForest self-contained
+  (mix + idade) apenas na janela de treino (`data_processo <= train_cutoff`,
+  sem vazar holdout) e preenche linhas com `Extrativo_AT` ausente.
+- **Coluna de proveniência `extr_origin`** (`medido` / `estimado`) publicada no
+  L2 — fecha o gap do contrato `feature-columns.yaml`.
+- **Sinal `INGEST_PROXY_EXTR`** (warning) no `signal-catalog.yaml` e regra na
+  `warning-matrix.yaml` (`train: admit`; `holdout: admit_if max_estimated_row_ratio ≤ 0.20`),
+  com guard `_eval_admit_if` correspondente.
+- Config `config/ingest.yaml` → bloco `extr_impute` (enabled, min_train_rows,
+  random_state, range_min/max).
+- Scripts: `scripts/backfill_extrativo_l2.py` (republica L2 enriquecido +
+  `extr_origin`) e `scripts/validate_extrativo_imputer.py` (MAE do imputer +
+  gráfico `graphics/extrativo_imputer_validation.png`).
+- Testes `tests/ingest/test_transform.py` (imputação preenche / esparsidade pula).
+
+### Validado (Excel L2)
+
+- Cobertura de `Extrativo_AT`: train 29,7% → 100% (4 967 estimadas);
+  holdout 85,6% → 100% (72 estimadas).
+- Qualidade do imputer (holdout medido): **MAE 0,304** vs baseline média 0,261
+  (**−16,5%**, não supera a média) e CV temporal 0,291 — mix+idade têm baixo
+  poder preditivo; a imputação entrega cobertura, não sinal.
+- Re-treino cascata (`direct_tsa`) com L2 enriquecido: MAE holdout
+  **90,83 → 89,43** (~1,5%); permanece acima do gate 56 (`release_ok=false`).
+- Detalhes em `reports/VALIDACAO_IMPUTER_EXTRATIVO.md` e
+  `docs/analysis/IMPUTACAO_EXTRATIVO_AT.md`.
+
+---
+
 ## [0.3.0] — 2026-07-10
 
 ### Adicionado

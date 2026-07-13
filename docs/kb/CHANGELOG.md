@@ -1,7 +1,14 @@
 # CHANGELOG — docs/kb
 
 **Autor:** Emerson Antônio  
-**Data:** 2026-07-10
+**Data:** 2026-07-13
+
+## [0.2.5] — 2026-07-13
+
+### Changed
+
+- `gifi-domain/concepts/operational-bands.md` — adicionada a cobertura das nove variáveis obrigatórias das APIs Forecast e Predict-TSA, distinguindo intervalos empíricos de zonas normativas.
+- Registradas explicitamente as quatro variáveis sem faixa normativa (`secura_pct`, `extrativo_total`, `extrativo_sgf` e `idade`), sem alterar `specs/operational-ranges.yaml`.
 
 ## [0.2.4] — 2026-07-10
 

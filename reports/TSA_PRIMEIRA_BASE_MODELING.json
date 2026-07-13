@@ -1,0 +1,87 @@
+{
+  "run_id": "2026-07-13T102553Z",
+  "target": "TSA_dia",
+  "features": [
+    "Carga_Alcalina",
+    "Kappa",
+    "DB_SGF",
+    "DB_LAB",
+    "Secura_pct",
+    "Casca_pct",
+    "Extrativo_Total",
+    "Extrativo_AT",
+    "Extrativo_SGF",
+    "TPC",
+    "Idade",
+    "vmi_le_021",
+    "vmi_021_025",
+    "vmi_gt_025",
+    "pct_AB",
+    "pct_C",
+    "pct_DMG"
+  ],
+  "n_total": 1902,
+  "n_train": 1521,
+  "n_holdout": 381,
+  "cv_ranking": [
+    {
+      "family": "baseline",
+      "cv_mae": 101.2488802287275
+    },
+    {
+      "family": "catboost",
+      "cv_mae": 101.86279111097858
+    },
+    {
+      "family": "randomforest",
+      "cv_mae": 103.04429018640243
+    },
+    {
+      "family": "extratrees",
+      "cv_mae": 103.75110719004098
+    },
+    {
+      "family": "xgboost",
+      "cv_mae": 106.9551290446037
+    },
+    {
+      "family": "histgradientboosting",
+      "cv_mae": 108.82043799840854
+    },
+    {
+      "family": "elasticnet",
+      "cv_mae": 109.15107850972772
+    },
+    {
+      "family": "ridge",
+      "cv_mae": 110.14220829394858
+    },
+    {
+      "family": "lasso",
+      "cv_mae": 110.1830204443473
+    },
+    {
+      "family": "lightgbm",
+      "cv_mae": 112.4935116192272
+    }
+  ],
+  "champion": "catboost",
+  "grid_search": {
+    "family": "catboost",
+    "best_params": {
+      "model__depth": 10,
+      "model__iterations": 200,
+      "model__l2_leaf_reg": 10.0,
+      "model__learning_rate": 0.03
+    },
+    "cv_mae": 93.87004679846024,
+    "cv_folds": 5
+  },
+  "holdout_metrics": {
+    "mae": 103.69270177445952,
+    "rmse": 130.14053665544367,
+    "r2": -0.09189265462278362
+  },
+  "model_path": "/Users/emerson.antonio/Developar/keyrus/veracel/gifi-predict/models/primeira_base/2026-07-13T102553Z/tsa_catboost.joblib",
+  "graphic_path": "/Users/emerson.antonio/Developar/keyrus/veracel/gifi-predict/graphics/tsa_primeira_base_real_vs_pred.png"
+}

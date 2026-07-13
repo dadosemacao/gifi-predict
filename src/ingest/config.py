@@ -31,6 +31,11 @@ class IngestSettings(BaseSettings):
     db_proxy_factor: float = 0.985
     tsa_train_min: float = 1000.0
     mix_tolerance: float = 0.02
+    extr_impute_enabled: bool = True
+    extr_impute_min_train_rows: int = 200
+    extr_impute_random_state: int = 42
+    extr_range_min: float = 1.0
+    extr_range_max: float = 3.5
     read_timeout_s: int = 120
     lock_timeout_s: int = 30
     max_retries: int = 3
@@ -60,6 +65,15 @@ class IngestSettings(BaseSettings):
                 "db_proxy_factor": raw.get("db_proxy_factor", 0.985),
                 "tsa_train_min": raw.get("tsa_train_min", 1000),
                 "mix_tolerance": raw.get("mix_tolerance", 0.02),
+                "extr_impute_enabled": raw.get("extr_impute", {}).get("enabled", True),
+                "extr_impute_min_train_rows": raw.get("extr_impute", {}).get(
+                    "min_train_rows", 200
+                ),
+                "extr_impute_random_state": raw.get("extr_impute", {}).get(
+                    "random_state", 42
+                ),
+                "extr_range_min": raw.get("extr_impute", {}).get("range_min", 1.0),
+                "extr_range_max": raw.get("extr_impute", {}).get("range_max", 3.5),
                 "read_timeout_s": io_cfg.get("read_timeout_s", 120),
                 "lock_timeout_s": io_cfg.get("lock_timeout_s", 30),
                 "max_retries": io_cfg.get("max_retries", 3),

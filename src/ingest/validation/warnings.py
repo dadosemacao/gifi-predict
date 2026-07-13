@@ -38,6 +38,9 @@ class WarningMatrixEvaluator:
         if code == "INGEST_PROXY_DB" and df is not None and "db_origin" in df.columns:
             ratio = (df["db_origin"] == "proxy").mean()
             return ratio <= cond.get("max_proxy_row_ratio", 1.0)
+        if code == "INGEST_PROXY_EXTR" and df is not None and "extr_origin" in df.columns:
+            ratio = (df["extr_origin"] == "estimado").mean()
+            return ratio <= cond.get("max_estimated_row_ratio", 1.0)
         return True
 
     def _eval_block_if(self, condition: str, df: pd.DataFrame | None) -> bool:

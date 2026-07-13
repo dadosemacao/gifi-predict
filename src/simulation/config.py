@@ -63,6 +63,8 @@ class SimulationSettings(BaseSettings):
     tuning_elo3_oof_stack: bool = True
     tuning_n_jobs: int = -1
     tuning_select_by_cascade: bool = True
+    training_mode: str = "cascade"
+    mae_metric: str = "cascade"
 
     def tuning_config(self) -> TuningConfig:
         return TuningConfig(
@@ -136,6 +138,8 @@ class SimulationSettings(BaseSettings):
                 "tuning_elo3_oof_stack": tuning_cfg.get("elo3_oof_stack", True),
                 "tuning_n_jobs": tuning_cfg.get("n_jobs", -1),
                 "tuning_select_by_cascade": tuning_cfg.get("select_by_cascade", True),
+                "training_mode": raw.get("training_mode", "cascade"),
+                "mae_metric": raw.get("mae_metric", "cascade"),
             }
         else:
             data["repo_root"] = root

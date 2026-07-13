@@ -29,18 +29,42 @@ def infer_cascade_row(
     strict_scenario: bool = True,
 ) -> dict[str, Any]:
     x = dict(row)
-    if mode.upper() == "A" and strict_scenario:
-        if x.get("Carga_Alcalina") is not None and pd.notna(x.get("Carga_Alcalina")):
-            raise ScenarioRejectError(
-                "INGEST_SCENARIO_REJECT: Carga injetada em Modo A"
-            )
-        if x.get("Extrativo_AT") is not None and pd.notna(x.get("Extrativo_AT")):
-            raise ScenarioRejectError(
-                "INGEST_SCENARIO_REJECT: Extrativo injetado em Modo A"
-            )
-    elif mode.upper() == "A":
-        x.pop("Extrativo_AT", None)
-        x.pop("Carga_Alcalina", None)
+    direct_tsa = "elo1" not in pipes and "elo2" not in pipes
+
+    if not direct_tsa:
+        if mode.upper() == "A" and strict_scenario:
+            if x.get("Carga_Alcalina") is not None and pd.notna(x.get("Carga_Alcalina")):
+                raise ScenarioRejectError(
+                    "INGEST_SCENARIO_REJECT: Carga injetada em Modo A"
+                )
+            if x.get("Extrativo_AT") is not None and pd.notna(x.get("Extrativo_AT")):
+                raise ScenarioRejectError(
+                    "INGEST_SCENARIO_REJECT: Extrativo injetado em Modo A"
+                )
+        elif mode.upper() == "A":
+            x.pop("Extrativo_AT", None)
+            x.pop("Carga_Alcalina", None)
+
+    if direct_tsa:
+        if mode.upper() == "A" and strict_scenario:
+            if x.get("Carga_Alcalina") is not None and pd.notna(x.get("Carga_Alcalina")):
+                raise ScenarioRejectError(
+                    "INGEST_SCENARIO_REJECT: Carga injetada em Modo A"
+                )
+            if x.get("Extrativo_AT") is not None and pd.notna(x.get("Extrativo_AT")):
+                raise ScenarioRejectError(
+                    "INGEST_SCENARIO_REJECT: Extrativo injetado em Modo A"
+                )
+        tsa = float(
+            pipes["elo3"].predict(_row_frame(x, feature_cols["elo3"]))[0]
+        )
+        extr = x.get("Extrativo_AT")
+        carga = x.get("Carga_Alcalina")
+        return {
+            "Extrativo_AT": float(extr) if extr is not None and pd.notna(extr) else None,
+            "Carga_Alcalina": float(carga) if carga is not None and pd.notna(carga) else None,
+            "TSA_dia": tsa,
+        }
 
     if (
         mode.upper() == "B"

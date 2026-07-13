@@ -5,7 +5,7 @@ import pandas as pd
 from ingest.config import IngestSettings
 from ingest.observability.signals import Severity, SignalCollector
 from ingest.transform.aggregation import add_daily_meta_columns
-from ingest.transform.imputation import impute_db_lab
+from ingest.transform.imputation import impute_db_lab, impute_extrativo_at
 from ingest.transform.mix_features import derive_mix_features, derive_vmi_flags
 from ingest.validation.domain_rules import validate_historical_frame
 
@@ -27,6 +27,7 @@ def transform_historical(
     out = impute_db_lab(frame, settings, signals)
     out = derive_mix_features(out)
     out = derive_vmi_flags(out)
+    out = impute_extrativo_at(out, settings, signals)
     out = add_daily_meta_columns(out)
 
     if "TSA_dia" in out.columns:

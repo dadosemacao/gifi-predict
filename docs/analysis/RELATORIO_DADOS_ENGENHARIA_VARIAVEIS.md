@@ -432,30 +432,3 @@ Descrever problemas estruturais encontrados **apenas** nas variáveis solicitada
 | **P1** | Monitorar `% db_origin=proxy` e drift DB | DB Lab, SGF | Médio |
 | **P2** | Validar outliers TPC / Secura >100% | TPC, Secura | Baixo–médio |
 | **P2** | Série de drift mix/VMI para holdout | Mix, VMI | Médio (explicabilidade) |
-
----
-
-## 7. Anexos
-
-### A. Regras de ingest já aplicadas (manifesto)
-
-```json
-"rules_applied": ["TSA_filter", "DB_proxy", "mix_features", "holdout_split"]
-"exclusions": {"tsa_below_min": 9}
-"warning_codes": ["INGEST_PROXY_DB"]
-```
-
-### B. Referências
-
-- `docs/kb/gifi-ingest/specs/feature-columns.yaml`
-- `docs/sketch/ingest-engine.md` (§ I3 agregação turno→dia)
-- `docs/analysis/DIAGNOSTICO_MAE_ELO3.md`
-- `docs/sketch/REFERENCIA_FAIXAS_OPERACIONAIS.md`
-
----
-
-## 8. Changelog
-
-| Data | Alteração |
-|------|-----------|
-| 2026-07-10 | Versão inicial — análise L2 Excel validation |

@@ -4,7 +4,11 @@ import pandas as pd
 
 from ingest.config import IngestSettings
 from ingest.observability.signals import SignalCollector
-from ingest.transform.imputation import impute_db_lab
+from ingest.transform.imputation import (
+    EXTR_IMPUTE_FEATURES,
+    impute_db_lab,
+    impute_extrativo_at,
+)
 from ingest.transform.mix_features import derive_mix_features
 from ingest.transform.pipeline import transform_historical
 from ingest.validation.domain_rules import validate_mix
@@ -17,6 +21,59 @@ def test_proxy_db_imputation(settings: IngestSettings) -> None:
     assert abs(out.loc[0, "DB_LAB"] - 492.5) < 0.01
     assert out.loc[0, "db_origin"] == "proxy"
     assert "INGEST_PROXY_DB" in signals.codes()
+
+
+def _extr_frame(n_measured: int, n_missing: int) -> pd.DataFrame:
+    rows = []
+    for i in range(n_measured + n_missing):
+        measured = i < n_measured
+        a = 0.2 + (i % 5) * 0.05
+        feats = {
+            "pct_A": a,
+            "pct_B": 0.2,
+            "pct_C": 0.2,
+            "pct_D": 0.2,
+            "pct_MG": max(0.0, 1.0 - a - 0.6),
+            "pct_ABC": a + 0.4,
+            "pct_CDMG": 0.6 - a + 0.4,
+            "mix_entropy": 1.4 + (i % 3) * 0.05,
+            "mix_hhi": 0.30 + (i % 4) * 0.01,
+            "dom_A": 1.0 if a > 0.3 else 0.0,
+            "dom_B": 0.0,
+            "dom_C": 0.0,
+            "dom_D": 0.0,
+            "dom_MG": 0.0,
+            "Idade": 3 + (i % 4),
+        }
+        feats["Extrativo_AT"] = 1.6 + a if measured else pd.NA
+        feats["data_processo"] = pd.Timestamp("2024-01-01") + pd.Timedelta(days=i)
+        rows.append(feats)
+    return pd.DataFrame(rows)
+
+
+def test_extrativo_imputation_fills_missing(settings: IngestSettings) -> None:
+    assert "Extrativo_AT" not in EXTR_IMPUTE_FEATURES
+    df = _extr_frame(n_measured=260, n_missing=40)
+    signals = SignalCollector()
+    out = impute_extrativo_at(df, settings, signals)
+
+    assert out["Extrativo_AT"].isna().sum() == 0
+    assert (out["extr_origin"] == "medido").sum() == 260
+    assert (out["extr_origin"] == "estimado").sum() == 40
+    assert "INGEST_PROXY_EXTR" in signals.codes()
+    estimated = out.loc[out["extr_origin"] == "estimado", "Extrativo_AT"]
+    assert estimated.between(settings.extr_range_min, settings.extr_range_max).all()
+
+
+def test_extrativo_imputation_sparse_skips(settings: IngestSettings) -> None:
+    df = _extr_frame(n_measured=10, n_missing=5)
+    signals = SignalCollector()
+    out = impute_extrativo_at(df, settings, signals)
+
+    assert out["Extrativo_AT"].isna().sum() == 5
+    assert (out["extr_origin"] == "medido").sum() == 10
+    assert "INGEST_SPARSE_LAB" in signals.codes()
+    assert "INGEST_PROXY_EXTR" not in signals.codes()
 
 
 def test_mix_features_entropy_and_dom() -> None:

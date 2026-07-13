@@ -1,0 +1,65 @@
+{
+  "run_id": "2026-07-13T104544Z",
+  "product": "forecast_operacional_A",
+  "target": "TSA_dia",
+  "anchor": "TSA_roll3",
+  "n_total": 1895,
+  "n_train": 1516,
+  "n_holdout": 379,
+  "baselines_holdout_mae": {
+    "mean": 119.51636867895127,
+    "lag1": 57.76744336322916,
+    "roll3": 66.88640022252527,
+    "roll7": 75.31893080534086
+  },
+  "cv_ranking": [
+    {
+      "family": "extratrees",
+      "cv_mae": 53.99485342586089
+    },
+    {
+      "family": "randomforest",
+      "cv_mae": 57.159730844972884
+    },
+    {
+      "family": "catboost",
+      "cv_mae": 60.758510791154194
+    },
+    {
+      "family": "histgradientboosting",
+      "cv_mae": 65.30127848150633
+    },
+    {
+      "family": "lightgbm",
+      "cv_mae": 66.09104178495879
+    },
+    {
+      "family": "xgboost",
+      "cv_mae": 70.4966656949979
+    }
+  ],
+  "champion": "extratrees",
+  "grid_search": {
+    "family": "extratrees",
+    "best_params": {
+      "model__max_depth": 12,
+      "model__max_features": "sqrt",
+      "model__min_samples_leaf": 10,
+      "model__n_estimators": 200
+    },
+    "cv_mae": 49.85597878234347,
+    "cv_folds": 5
+  },
+  "holdout_metrics": {
+    "mae": 67.60559391708794,
+    "rmse": 107.92650275794252,
+    "r2": 0.2519437995836834
+  },
+  "interval_80_coverage": 0.7097625329815304,
+  "interval_quantiles": {
+    "q_lo": -69.95994343588055,
+    "q_hi": 83.79722900223128
+  },
+  "model_path": "/Users/emerson.antonio/Developar/keyrus/veracel/gifi-predict/models/primeira_base/forecast_2026-07-13T104544Z/forecast_extratrees.joblib",
+  "graphic_path": "/Users/emerson.antonio/Developar/keyrus/veracel/gifi-predict/graphics/tsa_forecast_operacional_real_vs_pred.png"
+}

@@ -85,6 +85,7 @@ def train_all(
     min_train_rows: int = 50,
     holdout: pd.DataFrame | None = None,
     tuning: TuningConfig | None = None,
+    training_mode: str = "cascade",
 ) -> tuple[
     dict[str, dict[str, Pipeline]],
     dict[str, dict[str, int]],
@@ -94,9 +95,10 @@ def train_all(
     fitted: dict[str, dict[str, Pipeline]] = {elo: {} for elo in ELO_ORDER}
     exclusions: dict[str, dict[str, int]] = {}
     feature_cols: dict[str, list[str]] = {}
-    tuning_meta: dict[str, Any] = {"elo3": {}}
+    tuning_meta: dict[str, Any] = {"elo3": {}, "training_mode": training_mode}
 
-    for elo in ("elo1", "elo2"):
+    cascade_elos = () if training_mode == "direct_tsa" else ("elo1", "elo2")
+    for elo in cascade_elos:
         X, y, excl, cols = build_matrix(
             train, elo, specs, min_rows=min_train_rows, enforce_min_rows=True
         )
@@ -116,7 +118,7 @@ def train_all(
     impute3 = _needs_imputer("elo3", cols3, specs)
 
     if tuning and tuning.enabled:
-        fitted_elo12 = pick_elo12_fill_pipes(fitted, families)
+        fitted_elo12 = pick_elo12_fill_pipes(fitted, families) if cascade_elos else None
 
         search_df, combined = _elo3_search_and_fit_pools(train, holdout, tuning)
         search_df, oof_meta_search = _prepare_elo3_frame(

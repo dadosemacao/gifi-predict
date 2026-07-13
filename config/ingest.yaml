@@ -13,6 +13,12 @@ online:
 db_proxy_factor: 0.985
 tsa_train_min: 1000
 mix_tolerance: 0.02
+extr_impute:
+  enabled: true
+  min_train_rows: 200
+  random_state: 42
+  range_min: 1.0
+  range_max: 3.5
 io:
   read_timeout_s: 120
   lock_timeout_s: 30

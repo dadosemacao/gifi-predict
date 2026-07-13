@@ -57,6 +57,11 @@ signals:
     meaning: "DB_LAB imputado 0.985 * DB_SGF"
     backbone_effect: motor_uses_report_records
 
+  - code: INGEST_PROXY_EXTR
+    severity: warning
+    meaning: "Extrativo_AT estimado pelo Elo 1 (mix + idade); extr_origin=estimado"
+    backbone_effect: motor_uses_report_records
+
   - code: INGEST_SPARSE_LAB
     severity: warning
     meaning: "Baixa cobertura Extrativo/Casca"
