@@ -4,9 +4,18 @@
 
 ---
 
-## [Não versionado] — 2026-07-13
+## [0.4.0] — 2026-07-13
 
-## [Não versionado] — 2026-07-13
+### Documentação (sincronização Camada 5)
+
+- **`README.md`** — Camada 5 shipped; serving, forecast, predict-tsa, audit SQLite; 13 preditores; estrutura atualizada.
+- **`docs/sketch/MAPA_COMPONENTES_GIFI.md`** v1.2 — C8 shipped; CLI `serve`; referências SDD WEB_UI + SERVING_SQLITE_AUDIT.
+- **`docs/guides/DEV_ENVIRONMENT.md`** v1.1 — comandos serving, dev UI, audit, testes web.
+- **`docs/api/README.md`** — índice das APIs REST.
+- **`docs/api/DICIONARIO_DADOS_SERVING_CENARIOS.md`** — contrato validate/simulate/release/template.
+- **`docs/kb/ml-tabular/patterns/inference-serving.md`** — atualizado de stub para implementação shipped.
+- **`docs/kb/gifi-domain/concepts/operational-bands.md`** — alinhado ao contrato 13 preditores (removidos campos obsoletos).
+- **`docs/kb/AGENTS.md`**, **`docs/kb/README.md`**, **`docs/kb/_index.yaml`** — inventário completo e link `docs/api/`.
 
 ### Alterado (Camada 3 — 13 preditores TSA)
 
@@ -45,10 +54,6 @@
   (Camada 3 reestruturada — ver entrada acima).
 - Testes de limites inclusivos, rejeição e HTTP `422` em
   `tests/serving/test_process_input_ranges.py`.
-
----
-
-## [Não versionado] — 2026-07-13
 
 ### Adicionado (Camada 2 — Ingest)
 
