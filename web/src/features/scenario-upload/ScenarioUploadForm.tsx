@@ -11,9 +11,19 @@ type Props = {
   onSubmit: (values: UploadFormValues) => void
   isSubmitting: boolean
   errorMessage?: string | null
+  demo: boolean
+  onDemoChange: (value: boolean) => void
+  releaseOk: boolean
 }
 
-export function ScenarioUploadForm({ onSubmit, isSubmitting, errorMessage }: Props) {
+export function ScenarioUploadForm({
+  onSubmit,
+  isSubmitting,
+  errorMessage,
+  demo,
+  onDemoChange,
+  releaseOk,
+}: Props) {
   const {
     handleSubmit,
     setValue,
@@ -53,6 +63,24 @@ export function ScenarioUploadForm({ onSubmit, isSubmitting, errorMessage }: Pro
           }}
         />
         {errors.file && <p className="text-sm text-red-600">{errors.file.message}</p>}
+      </div>
+
+      <div className="space-y-1">
+        <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-slate-300"
+            checked={demo}
+            disabled={!releaseOk}
+            onChange={(e) => onDemoChange(e.target.checked)}
+          />
+          Modo demonstração
+        </label>
+        <p className="text-xs text-slate-500">
+          {releaseOk
+            ? "Desmarque para tentar bind produtivo (release homologado A∧B∧C)."
+            : "Release não homologado (A∧B∧C). Apenas modo demonstração disponível."}
+        </p>
       </div>
 
       {errorMessage && <Alert>{errorMessage}</Alert>}
