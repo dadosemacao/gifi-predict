@@ -6,6 +6,19 @@
 
 ## [Não versionado] — 2026-07-13
 
+## [Não versionado] — 2026-07-13
+
+### Alterado (Camada 3 — 13 preditores TSA)
+
+- **SSOT** `src/simulation/process_specs.py`: 13 preditores oficiais para `TSA_dia`;
+  `Prod_alcali_class` ordinal (`baixo=0`, `normal=1`); `pct_C` auxiliar do imputer only.
+- **Removidos do modelo:** `DB_LAB`, `Secura_pct`, `Extrativo_Total`, `Extrativo_SGF`, `pct_C`.
+- **Forecast e predict-tsa** passam a usar os mesmos 13 preditores; `DB_c` no FE usa `DB_SGF`.
+- **Regenerado** `base/primeira_base.csv` (2012 linhas) via `scripts/build_primeira_base.py`.
+- **Retreinados** modelos: what-if Lasso (`2026-07-13T143520Z`, MAE ~89) e forecast ExtraTrees
+  (`2026-07-13T143544Z`, MAE ~67).
+- UI, schemas serving, testes (`60 passed`) e dicionário API v1.1 atualizados.
+
 ### Adicionado (Serving — SQLite Audit)
 
 - **Auditoria call-by-call** de todos os endpoints `/api/*` via middleware ASGI
@@ -28,8 +41,8 @@
   obrigatórios cobertos pelo SSOT oficial estão fora das faixas: Carga Alcalina
   `[17,5; 21,0]`, Kappa `[15; 18,5]`, DB_SGF `[465; 515]` kg/m³,
   Casca `≤ 1,5%` e TPC `≥ 45` dias.
-- `secura_pct`, `extrativo_total`, `extrativo_sgf` e `idade` permanecem
-  obrigatórios, mas sem limite rígido por não possuírem faixa normativa.
+- `secura_pct`, `extrativo_total`, `extrativo_sgf` e `db_lab` **removidos** do contrato API
+  (Camada 3 reestruturada — ver entrada acima).
 - Testes de limites inclusivos, rejeição e HTTP `422` em
   `tests/serving/test_process_input_ranges.py`.
 

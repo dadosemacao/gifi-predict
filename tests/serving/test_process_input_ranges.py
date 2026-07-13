@@ -12,17 +12,14 @@ from pydantic import ValidationError
 from serving.schemas import ForecastRequest, PredictTsaRequest
 
 
-def _valid_process_payload() -> dict[str, float]:
+def _valid_process_payload() -> dict[str, float | str]:
     return {
         "carga_alcalina": 19.0,
         "kappa": 16.5,
+        "prod_alcali_class": 1,
         "db_sgf": 490.0,
-        "db_lab": 483.0,
-        "secura_pct": 62.0,
         "casca_pct": 0.8,
-        "extrativo_total": 3.5,
         "extrativo_at": 1.9,
-        "extrativo_sgf": 4.0,
         "tpc": 65.0,
         "idade": 6.7,
         "vmi_le_021": 0.0,
@@ -87,13 +84,20 @@ def test_official_range_boundaries_are_inclusive(field: str, value: float) -> No
     assert getattr(parsed, field) == value
 
 
+def test_prod_alcali_class_accepts_string_label() -> None:
+    payload = _valid_process_payload()
+    payload["prod_alcali_class"] = "baixo"
+
+    parsed = PredictTsaRequest.model_validate(payload)
+
+    assert parsed.prod_alcali_class == 0.0
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     [
-        ("secura_pct", 45.0),
-        ("extrativo_total", 6.5),
-        ("extrativo_sgf", 6.0),
         ("idade", 11.0),
+        ("pct_c", 0.35),
     ],
 )
 def test_fields_without_official_ranges_remain_unbounded(

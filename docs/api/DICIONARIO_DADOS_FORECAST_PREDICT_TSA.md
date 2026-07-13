@@ -2,7 +2,7 @@
 
 **Autor:** Emerson Antônio  
 **Data:** 2026-07-13  
-**Versão:** 1.0  
+**Versão:** 1.1  
 **Escopo:** `POST/GET /api/forecast` e `POST/GET /api/predict-tsa`  
 **Fonte de verdade (código):** `src/serving/schemas.py`, `src/serving/routes/`, `src/serving/services/`
 
@@ -15,9 +15,9 @@
 | **Produto** | `forecast_operacional` | `what_if_direct` |
 | **Objetivo** | Prever TSA do **próximo turno** com histórico recente | What-if **direto**: TSA só a partir das variáveis de processo |
 | **Histórico TSA** | **Obrigatório** (`tsa_history`, mín. 7 valores) | **Não usado** |
-| **Modelo campeão** | ExtraTrees residual sobre âncora `TSA_roll3` | CatBoost direto (17 features) |
+| **Modelo campeão** | ExtraTrees residual sobre âncora `TSA_roll3` | Lasso direto (13 preditores) |
 | **Saída principal** | `tsa_dia` + intervalo (`tsa_dia_lo`, `tsa_dia_hi`) + baselines | `tsa_dia` pontual |
-| **MAE holdout (ref.)** | ~68 t/dia | ~104 t/dia |
+| **MAE holdout (ref.)** | ~67 t/dia | ~89 t/dia |
 | **Artefato** | `models/primeira_base/current_forecast.json` | `models/primeira_base/current_tsa.json` |
 | **Content-Type** | `application/json` | `application/json` |
 
@@ -51,19 +51,19 @@ Campos ausentes no request e não resolvidos geram erro `422`.
 
 | Tier | Campos | Regra |
 |------|--------|-------|
-| **Obrigatório** | `carga_alcalina`, `kappa`, `db_sgf`, `secura_pct`, `casca_pct`, `extrativo_total`, `extrativo_sgf`, `tpc`, `idade` | Devem estar no request; sem fallback |
-| **Tier A — proxy** | `db_lab`, `pct_ab`, `pct_dmg`, `vmi_le_021`, `vmi_021_025`, `vmi_gt_025` | Derivados se insumos auxiliares existirem |
+| **Obrigatório** | `carga_alcalina`, `kappa`, `prod_alcali_class`, `db_sgf`, `casca_pct`, `tpc`, `idade` | Devem estar no request; sem fallback |
+| **Tier A — proxy** | `pct_ab`, `pct_dmg`, `vmi_le_021`, `vmi_021_025`, `vmi_gt_025` | Derivados se insumos auxiliares existirem |
 | **Tier B — estimado** | `extrativo_at` | RF serving (`mix + idade`) se ausente |
-| **Tier C — inexistente** | — | Sem imputação para campos obrigatórios não cobertos acima |
+| **Auxiliar (imputer)** | `pct_c` | Usado só na imputação Tier B; **não** entra no modelo TSA |
 
 ### 2.4 Regras Tier A (detalhe)
 
 | Campo destino | Condição | Fórmula / regra |
 |---------------|----------|-----------------|
-| `db_lab` | `db_lab` ausente e `db_sgf` presente | `db_lab = db_sgf × 0.985` (fator configurável via ingest) |
 | `pct_ab` | `pct_ab` ausente | `pct_a + pct_b` (requer ambos) |
 | `pct_dmg` | `pct_dmg` ausente | `pct_d + pct_mg` (requer ambos) |
 | `vmi_*` | flags ausentes | A partir de `vmi` contínuo: `≤0.21` → `vmi_le_021=1`; `0.21<v≤0.25` → `vmi_021_025=1`; `>0.25` → `vmi_gt_025=1` (one-hot) |
+| `prod_alcali_class` | string ou número | Ordinal: `baixo`/`0` → 0; `normal`/`1` → 1 |
 
 ### 2.5 Regra Tier B (detalhe)
 
@@ -79,50 +79,41 @@ Campos comuns a **Forecast** e **Predict-TSA**. Tipos JSON: `number` (float).
 
 ### 3.1 Variáveis obrigatórias no request
 
-| Campo API | Coluna L2 | Unidade | Descrição | Faixa empírica (`primeira_base.csv`) | Validação rígida da API |
-|-----------|-----------|---------|-----------|--------------------------------------|-------------------------|
-| `carga_alcalina` | `Carga_Alcalina` | % Na₂O* | Carga alcalina efetiva do digestor | 15,8 – 22,0 (p50 ≈ 18,7) | **17,5 ≤ valor ≤ 21,0** |
-| `kappa` | `Kappa` | adimensional | Índice kappa do licor | 6,7 – 19,9 (p50 ≈ 16,0) | **15,0 ≤ valor ≤ 18,5** |
-| `db_sgf` | `DB_SGF` | **kg/m³** | Densidade básica medida no SGF | 450 – 526 (p50 ≈ 487) | **465 ≤ valor ≤ 515** |
-| `secura_pct` | `Secura_pct` | **%** | Percentual de secagem dos cavacos | 46 – 71 (p50 ≈ 62) | Sem faixa normativa |
-| `casca_pct` | `Casca_pct` | **%** | Percentual de casca nos cavacos | 0,14 – 2,44 (p50 ≈ 0,84) | **valor ≤ 1,5** |
-| `extrativo_total` | `Extrativo_Total` | adimensional* | Extrativo total (índice de qualidade) | 1,75 – 6,19 (p50 ≈ 3,5) | Sem faixa normativa |
-| `extrativo_sgf` | `Extrativo_SGF` | adimensional* | Extrativo medido no SGF | 2,94 – 5,85 (p50 ≈ 3,96) | Sem faixa normativa |
-| `tpc` | `TPC` | **dias** | Tempo de permanência no cozimento | 24 – 185 (p50 ≈ 59) | **valor ≥ 45** |
-| `idade` | `Idade` | **anos** | Idade média da madeira | 5,4 – 10,1 (p50 ≈ 6,7) | Sem faixa normativa |
+| Campo API | Coluna L2 | Unidade | Descrição | Validação rígida da API |
+|-----------|-----------|---------|-----------|-------------------------|
+| `carga_alcalina` | `Carga_Alcalina` | % Na₂O* | Carga alcalina efetiva do digestor | **17,5 ≤ valor ≤ 21,0** |
+| `kappa` | `Kappa` | adimensional | Índice kappa do licor | **15,0 ≤ valor ≤ 18,5** |
+| `prod_alcali_class` | `Prod_alcali_class` | ordinal {0,1} | Classe produção álcali: 0=baixo, 1=normal | Aceita `0`/`1` ou `"baixo"`/`"normal"` |
+| `db_sgf` | `DB_SGF` | **kg/m³** | Densidade básica medida no SGF | **465 ≤ valor ≤ 515** |
+| `casca_pct` | `Casca_pct` | **%** | Percentual de casca nos cavacos | **valor ≤ 1,5** |
+| `tpc` | `TPC` | **dias** | Tempo de permanência no cozimento | **valor ≥ 45** |
+| `idade` | `Idade` | **anos** | Idade média da madeira | Sem faixa normativa |
 
-\* Unidades de processo conforme planilha QM × Processo; ver `docs/sketch/REFERENCIA_FAIXAS_OPERACIONAIS.md`.
+\* Unidades de processo conforme planilha QM × Processo.
 
-As faixas empíricas são descritivas e **não** constituem, isoladamente, limites
-de aceitação. A validação rígida usa somente as zonas oficiais de
-`docs/kb/gifi-domain/specs/operational-ranges.yaml`. Valores fora dos cinco
-limites cobertos retornam HTTP `422` antes da execução do modelo. Os limites
-são inclusivos. `secura_pct`, `extrativo_total`, `extrativo_sgf` e `idade`
-permanecem obrigatórios, mas sem restrição numérica enquanto não houver faixa
-oficial no SSOT de domínio.
+Valores fora dos limites oficiais retornam HTTP `422`. Limites inclusivos.
 
 ### 3.2 Variáveis opcionais (imputáveis Tier A/B)
 
-| Campo API | Coluna L2 | Unidade | Obrigatório final | Tier | Descrição |
-|-----------|-----------|---------|-------------------|------|-----------|
-| `db_lab` | `DB_LAB` | **kg/m³** | Sim | A | Densidade básica Lab; proxy de `db_sgf` se omitido |
-| `extrativo_at` | `Extrativo_AT` | adimensional* | Sim | B | Extrativo álcool-tolueno; imputado se omitido |
-| `pct_ab` | `pct_AB` | proporção [0–1] | Sim* | A | Fração A+B no mix |
-| `pct_c` | `pct_C` | proporção [0–1] | Sim* | — | Fração C no mix |
-| `pct_dmg` | `pct_DMG` | proporção [0–1] | Sim* | A | Fração D+MG no mix |
-| `vmi_le_021` | `vmi_le_021` | flag {0, 1} | Sim* | A | VMI ≤ 0,21 |
-| `vmi_021_025` | `vmi_021_025` | flag {0, 1} | Sim* | A | 0,21 < VMI ≤ 0,25 |
-| `vmi_gt_025` | `vmi_gt_025` | flag {0, 1} | Sim* | A | VMI > 0,25 |
+| Campo API | Coluna L2 | Obrigatório final | Tier | Descrição |
+|-----------|-----------|-------------------|------|-----------|
+| `extrativo_at` | `Extrativo_AT` | Sim | B | Extrativo álcool-tolueno; imputado se omitido |
+| `pct_ab` | `pct_AB` | Sim* | A | Fração A+B no mix |
+| `pct_dmg` | `pct_DMG` | Sim* | A | Fração D+MG no mix |
+| `vmi_le_021` | `vmi_le_021` | Sim* | A | VMI ≤ 0,21 |
+| `vmi_021_025` | `vmi_021_025` | Sim* | A | 0,21 < VMI ≤ 0,25 |
+| `vmi_gt_025` | `vmi_gt_025` | Sim* | A | VMI > 0,25 |
 
-\* Após resolução, os 17 campos de `PROCESS_FEATURES` devem estar completos. Mix e VMI podem ser informados diretamente ou via campos auxiliares.
+\* Após resolução, os **13** campos de `PROCESS_COLUMNS` devem estar completos. Mix e VMI podem ser informados diretamente ou via campos auxiliares.
 
-### 3.3 Campos auxiliares (somente derivação; não vão ao modelo)
+### 3.3 Campos auxiliares (somente derivação / imputer; não vão ao modelo TSA)
 
 | Campo API | Tipo | Descrição |
 |-----------|------|-----------|
 | `vmi` | number | VMI contínuo; deriva as três flags `vmi_*` |
 | `pct_a` | number | Componente A do mix (para derivar `pct_ab`) |
 | `pct_b` | number | Componente B do mix |
+| `pct_c` | number | Componente C — **auxiliar do imputer** `Extrativo_AT` |
 | `pct_d` | number | Componente D (para derivar `pct_dmg`) |
 | `pct_mg` | number | Componente MG |
 
@@ -238,7 +229,7 @@ Metadados do modelo de forecast bindado (sem inferência).
 
 ### 5.1 `POST /api/predict-tsa`
 
-Predição **direta** de TSA a partir das 17 variáveis de processo, **sem** histórico TSA.
+Predição **direta** de TSA a partir das **13** variáveis de processo oficiais, **sem** histórico TSA.
 
 #### Query parameters
 
@@ -255,16 +246,18 @@ Idêntico a `ProcessVariablesInput` (sem `tsa_history`).
 | Campo | Tipo | Obrigatório | Descrição |
 |-------|------|-------------|-----------|
 | `product` | string | Sim | Constante `"what_if_direct"` |
-| `model_id` | string | Sim | Run ID do CatBoost bindado |
-| `family` | string | Sim | Família (ex.: `catboost`) |
+| `model_id` | string | Sim | Run ID do modelo bindado |
+| `family` | string | Sim | Família (ex.: `lasso`) |
 | `tsa_dia` | number | Sim | TSA predita (t/dia) |
 | `disclaimer` | string | Sim | Aviso de MAE superior ao forecast operacional |
 | `metrics` | object | Sim | Métricas holdout (`HoldoutMetricsResponse`) |
 | `field_origins` | object | Sim | Origens após resolução |
 | `warnings` | array[string] | Sim | Avisos de imputação |
 
-**Features do modelo (17):**  
-`Carga_Alcalina`, `Kappa`, `DB_SGF`, `DB_LAB`, `Secura_pct`, `Casca_pct`, `Extrativo_Total`, `Extrativo_AT`, `Extrativo_SGF`, `TPC`, `Idade`, `vmi_le_021`, `vmi_021_025`, `vmi_gt_025`, `pct_AB`, `pct_C`, `pct_DMG`.
+**Features do modelo (13):**  
+`Carga_Alcalina`, `Kappa`, `Prod_alcali_class`, `DB_SGF`, `Idade`, `TPC`, `pct_AB`, `pct_DMG`, `vmi_le_021`, `vmi_021_025`, `vmi_gt_025`, `Extrativo_AT`, `Casca_pct`.
+
+**Removidos da Camada 3 (v1.0):** `DB_LAB`, `Secura_pct`, `Extrativo_Total`, `Extrativo_SGF`, `pct_C` (este último permanece auxiliar do imputer).
 
 ---
 

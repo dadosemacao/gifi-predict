@@ -8,7 +8,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pandas as pd
 from fastapi.testclient import TestClient
 
 from serving.app import create_app
@@ -25,64 +24,25 @@ def _fetch_last(db_path: Path) -> dict | None:
     return dict(row) if row else None
 
 
-def _forecast_payload(repo_root: Path) -> dict:
-    row = pd.read_csv(repo_root / "base" / "primeira_base.csv").iloc[0]
-    history = [float(row["TSA_dia"])] * 7
-    return {
-        "tsa_history": history,
-        "carga_alcalina": float(row["Carga_Alcalina"]),
-        "kappa": float(row["Kappa"]),
-        "db_sgf": float(row["DB_SGF"]),
-        "db_lab": float(row["DB_LAB"]),
-        "secura_pct": float(row["Secura_pct"]),
-        "casca_pct": float(row["Casca_pct"]),
-        "extrativo_total": float(row["Extrativo_Total"]),
-        "extrativo_at": float(row["Extrativo_AT"]),
-        "extrativo_sgf": float(row["Extrativo_SGF"]),
-        "tpc": float(row["TPC"]),
-        "idade": float(row["Idade"]),
-        "vmi_le_021": float(row["vmi_le_021"]),
-        "vmi_021_025": float(row["vmi_021_025"]),
-        "vmi_gt_025": float(row["vmi_gt_025"]),
-        "pct_ab": float(row["pct_AB"]),
-        "pct_c": float(row["pct_C"]),
-        "pct_dmg": float(row["pct_DMG"]),
-    }
+def _forecast_payload(sample_process_payload: dict) -> dict:
+    history = [3289.0] * 7
+    return {"tsa_history": history, **sample_process_payload}
 
 
-def _predict_payload(repo_root: Path, *, drop_db_lab: bool = False) -> dict:
-    row = pd.read_csv(repo_root / "base" / "primeira_base.csv").iloc[0]
-    payload = {
-        "carga_alcalina": float(row["Carga_Alcalina"]),
-        "kappa": float(row["Kappa"]),
-        "db_sgf": float(row["DB_SGF"]),
-        "db_lab": float(row["DB_LAB"]),
-        "secura_pct": float(row["Secura_pct"]),
-        "casca_pct": float(row["Casca_pct"]),
-        "extrativo_total": float(row["Extrativo_Total"]),
-        "extrativo_at": float(row["Extrativo_AT"]),
-        "extrativo_sgf": float(row["Extrativo_SGF"]),
-        "tpc": float(row["TPC"]),
-        "idade": float(row["Idade"]),
-        "vmi_le_021": float(row["vmi_le_021"]),
-        "vmi_021_025": float(row["vmi_021_025"]),
-        "vmi_gt_025": float(row["vmi_gt_025"]),
-        "pct_ab": float(row["pct_AB"]),
-        "pct_c": float(row["pct_C"]),
-        "pct_dmg": float(row["pct_DMG"]),
-    }
-    if drop_db_lab:
-        payload.pop("db_lab")
+def _predict_payload(sample_process_payload: dict, *, drop_extrativo_at: bool = False) -> dict:
+    payload = dict(sample_process_payload)
+    if drop_extrativo_at:
+        payload.pop("extrativo_at", None)
     return payload
 
 
 def test_audit_forecast_persists_row(
-    repo_root: Path,
     serving_settings: ServingSettings,
     audit_db: Path,
+    sample_process_payload: dict,
 ) -> None:
     with TestClient(create_app(serving_settings)) as client:
-        payload = _forecast_payload(repo_root)
+        payload = _forecast_payload(sample_process_payload)
         response = client.post("/api/forecast", json=payload)
         assert response.status_code == 200
 
@@ -96,13 +56,13 @@ def test_audit_forecast_persists_row(
     assert row["duration_ms"] >= 0
 
 
-def test_audit_predict_tsa_proxy_origins(
-    repo_root: Path,
+def test_audit_predict_tsa_estimated_origins(
     serving_settings: ServingSettings,
     audit_db: Path,
+    sample_process_payload: dict,
 ) -> None:
     with TestClient(create_app(serving_settings)) as client:
-        payload = _predict_payload(repo_root, drop_db_lab=True)
+        payload = _predict_payload(sample_process_payload, drop_extrativo_at=True)
         response = client.post("/api/predict-tsa", json=payload)
         assert response.status_code == 200
 
@@ -110,7 +70,7 @@ def test_audit_predict_tsa_proxy_origins(
     assert row is not None
     assert row["endpoint"] == "predict_tsa"
     origins = json.loads(row["field_origins_json"])
-    assert origins["db_lab"] == "proxy"
+    assert origins["extrativo_at"] == "estimado"
 
 
 def test_audit_validation_error_422(

@@ -1,24 +1,59 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
-from ingest.config import IngestSettings
 from serving.app import create_app
 from serving.config import ServingSettings
+from ingest.config import IngestSettings
 from simulation.config import SimulationSettings
 
 
 @pytest.fixture
-def repo_root() -> Path:
-    return Path(__file__).resolve().parents[2]
+def sample_process_payload(repo_root: Path) -> dict:
+    row = pd.read_csv(repo_root / "base" / "primeira_base.csv").iloc[0]
+    return {
+        "carga_alcalina": float(row["Carga_Alcalina"]),
+        "kappa": float(row["Kappa"]),
+        "prod_alcali_class": float(row["Prod_alcali_class"]),
+        "db_sgf": float(row["DB_SGF"]),
+        "casca_pct": float(row["Casca_pct"]),
+        "extrativo_at": float(row["Extrativo_AT"]),
+        "tpc": float(row["TPC"]),
+        "idade": float(row["Idade"]),
+        "vmi_le_021": float(row["vmi_le_021"]),
+        "vmi_021_025": float(row["vmi_021_025"]),
+        "vmi_gt_025": float(row["vmi_gt_025"]),
+        "pct_ab": float(row["pct_AB"]),
+        "pct_c": float(row["pct_C"]),
+        "pct_dmg": float(row["pct_DMG"]),
+    }
+
+
+@pytest.fixture
+def tsa_pointer(repo_root: Path) -> dict:
+    path = repo_root / "models" / "primeira_base" / "current_tsa.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+@pytest.fixture
+def forecast_pointer(repo_root: Path) -> dict:
+    path = repo_root / "models" / "primeira_base" / "current_forecast.json"
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 @pytest.fixture
 def default_run_id(repo_root: Path) -> str:
     cfg = ServingSettings.from_yaml(repo_root)
     return cfg.default_run_id
+
+
+@pytest.fixture
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
 
 
 @pytest.fixture
