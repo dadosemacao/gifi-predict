@@ -231,4 +231,9 @@ reports/acceptance/
 catboost_info/
 **/.DS_Store
 node_modules/
-web/dist/
+
+# Dados de negocio (fora do versionamento)
+datasets/
+excels/
+base/
+data/tmp/

@@ -15,6 +15,17 @@
   Adicionado cabeçalho `# ===== Especifico do GIFI =====` e versionados os
   arquivos antes ignorados.
 
+### Alterado (Infra — .gitignore / limpeza de versionamento)
+
+- **`.gitignore`** — removida a regra redundante `web/dist/` (já coberta por
+  `dist/`).
+- **Dados de negócio fora do versionamento** — `datasets/`, `excels/`, `base/`
+  e `data/tmp/` adicionados ao `.gitignore` e desindexados via
+  `git rm --cached` (arquivos preservados localmente): `primeira_base.csv`,
+  `data/tmp/qm_part01_modo_a.csv`, `datasets/qm_processo_part_0[1-5].csv` e
+  a planilha consolidada `.xlsx` (~6 MB no total) deixam de ser rastreados.
+- **`models/`** — confirmado fora do versionamento (regra `/models/` mantida).
+
 ### Adicionado (SDD — Phase 0–1 Docker Serving Prod)
 
 - **`.claude/sdd/features/BRAINSTORM_DOCKER_SERVING_PROD.md`** — exploração do MVP
