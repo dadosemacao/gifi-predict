@@ -4,6 +4,35 @@
 
 ---
 
+## [0.4.2] — 2026-07-14
+
+### Corrigido (Infra — .gitignore)
+
+- **`.gitignore`** — regra genérica `lib/`/`lib64/` (herdada do template Python)
+  ancorada para `/lib/` e `/lib64/`. A versão anterior casava com qualquer
+  diretório `lib` em qualquer nível e ignorava silenciosamente `web/src/lib/`
+  (frontend), deixando `errorMessages.ts` e `utils.ts` fora do versionamento.
+  Adicionado cabeçalho `# ===== Especifico do GIFI =====` e versionados os
+  arquivos antes ignorados.
+
+### Adicionado (SDD — Phase 0–1 Docker Serving Prod)
+
+- **`.claude/sdd/features/BRAINSTORM_DOCKER_SERVING_PROD.md`** — exploração do MVP
+  container local (release pack + multi-stage Docker + compose): escopo fases A–C,
+  sem IaC Azure/`src/serving`, Approach A confirmada; pronto para `/define`.
+- **`.claude/sdd/features/DEFINE_DOCKER_SERVING_PROD.md`** — requisitos Phase 1
+  (clareza 15/15): manifesto de release, Dockerfile multi-stage, compose 1 serviço,
+  ATs AT-DSP-001…009, contrato `ReleaseStatusResponse` no smoke, zero mudança
+  obrigatória em `src/serving`; pronto para `/design`.
+
+### Adicionado (Documentação — Docker Prod)
+
+- **`docs/guides/TAREFA_DOCKER_SERVING_PROD.md`** — documento de tarefa para
+  empacotar 1 container `gifi-serving` (API + UI) no Azure App Service: decisões
+  (Blob + bake, volume só audit, jobs locais, sem MLflow), checklist por fase
+  (pacote A → Dockerfile B → compose C → CI/Azure D → débitos E) e critérios
+  de sucesso. Origem: decisões de arquitetura 2026-07-14.
+
 ## [0.4.1] — 2026-07-13
 
 ### Adicionado (Camada 5 — Predict-TSA Analytics)
