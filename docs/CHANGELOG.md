@@ -6,6 +6,37 @@
 
 ## [0.4.1] — 2026-07-13
 
+### Adicionado (Camada 5 — Predict-TSA Analytics)
+
+- **`POST /api/predict-tsa`** com opt-in `include_analytics`: curva de sensibilidade
+  (`sensitivity[]`) + top-3 `local_ablation` (`detractors[]`); query params
+  `sensitivity_variable` / `sensitivity_steps`; chaves omitidas sem analytics.
+- Serving: `src/serving/services/predict_tsa_analytics.py`.
+- UI What-if: checkbox analytics, seletor de variável, `SensitivityChart`,
+  `LocalDetractorsList`.
+- Testes: pytest AT-PTA + Vitest smoke; dicionário API v1.2; SDD DESIGN/DEFINE/BRAINSTORM
+  + `BUILD_REPORT_PREDICT_TSA_ANALYTICS.md`.
+
+### Adicionado (SDD — Phase 0–2)
+
+- **`.claude/sdd/features/BRAINSTORM_PREDICT_TSA_ANALYTICS.md`** — exploração da
+  extensão de `/api/predict-tsa` para Analytics (curva de sensibilidade + top-3
+  por ablação local, opt-in), sem depender de `/api/simulate` nem `/api/forecast`.
+- **`.claude/sdd/features/DEFINE_PREDICT_TSA_ANALYTICS.md`** — requisitos Phase 1
+  (clareza 15/15): opt-in query params, contrato `sensitivity`/`detractors`,
+  ATs AT-PTA-001…008, UI só What-if.
+- **`.claude/sdd/features/DESIGN_PREDICT_TSA_ANALYTICS.md`** — arquitetura Phase 2:
+  `predict_tsa_analytics` (sweep + ablação vetorizada), omitir chaves sem
+  analytics, pool de 7 contínuas, UI `SensitivityChart` + lista local.
+- **`.claude/sdd/archive/PREDICT_TSA_ANALYTICS/`** — feature shipped
+  (`SHIPPED_2026-07-14.md` + BRAINSTORM/DEFINE/DESIGN/BUILD_REPORT).
+
+### Adicionado (Documentação — Azure)
+
+- **`docs/guides/AZURE_APP_SERVICE_REQUISITOS.md`** — levantamento de requisitos
+  para rodar serving + UI em Produção no Azure App Service (Linux container):
+  artefatos, SKUs, rede, segurança, persistência SQLite, CI/CD e checklist.
+
 ### Alterado (Camada 5 — UI produto/UX)
 
 - **Paridade Zod ↔ Pydantic:** `web/src/schemas/processSchema.ts` passa a espelhar as
@@ -32,6 +63,10 @@
 
 ### Adicionado (Documentação)
 
+- **`docs/analysis/GAP_INGEST_ENGINE_FONTES.md`** — gap analysis plano
+  `ingest-engine.md` v1.2 × `src/ingest/` (P0: `INGEST_SOURCE_MISSING` + bug
+  `admit_mode_a_estimated`; P1 rastreabilidade; Marco 1 shipped com débitos).
+- Cross-link na §10 de `docs/sketch/ingest-engine.md`.
 - **`docs/api/GAPS_UI_E_VALIDACAO.md`** — gaps de UI fechados/abertos.
 - **`docs/guides/SECURITY_SERVING_DEBITOS.md`** — débitos de segurança serving
   (auth, path traversal, upload limits, joblib) documentados, sem implementação.

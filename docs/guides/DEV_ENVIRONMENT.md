@@ -225,6 +225,7 @@ docs/api/       Dicionários REST
 - Segurança serving — ver [`SECURITY_SERVING_DEBITOS.md`](SECURITY_SERVING_DEBITOS.md) (auth, rate limit, path traversal, upload limits, joblib)
 - Playwright E2E
 - Pin explícito de cobertura mínima no CI
+- Cloud Azure (Produção, App Service) — ver [`AZURE_APP_SERVICE_REQUISITOS.md`](AZURE_APP_SERVICE_REQUISITOS.md)
 
 **Fechado em 2026-07-13:** paridade Zod ↔ Pydantic e toggle demo/prod na UI —
 ver [`../api/GAPS_UI_E_VALIDACAO.md`](../api/GAPS_UI_E_VALIDACAO.md).

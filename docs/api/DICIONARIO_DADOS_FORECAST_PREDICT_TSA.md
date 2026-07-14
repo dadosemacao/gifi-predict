@@ -2,7 +2,7 @@
 
 **Autor:** Emerson Antônio  
 **Data:** 2026-07-13  
-**Versão:** 1.1  
+**Versão:** 1.2  
 **Escopo:** `POST/GET /api/forecast` e `POST/GET /api/predict-tsa`  
 **Relacionado:** [DICIONARIO_DADOS_SERVING_CENARIOS.md](DICIONARIO_DADOS_SERVING_CENARIOS.md) (upload cascata) · [README.md](README.md) (índice)
 **Fonte de verdade (código):** `src/serving/schemas.py`, `src/serving/routes/`, `src/serving/services/`
@@ -237,6 +237,11 @@ Predição **direta** de TSA a partir das **13** variáveis de processo oficiais
 | Parâmetro | Tipo | Obrigatório | Descrição |
 |-----------|------|-------------|-----------|
 | `run_id` | string | Não | ID do run; default via `current_tsa.json` |
+| `include_analytics` | bool | Não | Default `false`. Se `true`, calcula curva de sensibilidade + top-3 ablação local |
+| `sensitivity_variable` | string | Não | Default `db_sgf`. Whitelist: `db_sgf`, `carga_alcalina`, `kappa`, `casca_pct`, `tpc`, `extrativo_at`, `idade` |
+| `sensitivity_steps` | int | Não | Default `15`; válido **[5, 31]** |
+
+Com `include_analytics=true`, variável fora da whitelist ou steps fora de [5, 31] → HTTP **422**.
 
 #### Request body — `PredictTsaRequest`
 
@@ -250,10 +255,30 @@ Idêntico a `ProcessVariablesInput` (sem `tsa_history`).
 | `model_id` | string | Sim | Run ID do modelo bindado |
 | `family` | string | Sim | Família (ex.: `lasso`) |
 | `tsa_dia` | number | Sim | TSA predita (t/dia) |
-| `disclaimer` | string | Sim | Aviso de MAE superior ao forecast operacional |
+| `disclaimer` | string | Sim | Aviso de MAE; com analytics, distingue de Matriz C / gate L4 |
 | `metrics` | object | Sim | Métricas holdout (`HoldoutMetricsResponse`) |
 | `field_origins` | object | Sim | Origens após resolução |
 | `warnings` | array[string] | Sim | Avisos de imputação |
+| `sensitivity` | array[{value, tsa_dia}] | Só se analytics | Grid inclusivo min→max da faixa oficial; omitido se analytics off |
+| `detractors` | array[{feature, delta_tsa, method}] | Só se analytics | Top-3; `method` = `"local_ablation"`; omitido se analytics off |
+| `sensitivity_variable` | string | Só se analytics | Eco do eixo usado |
+| `sensitivity_steps` | int | Só se analytics | Eco do número de pontos |
+
+**Convenção retrocompat:** sem `include_analytics`, as chaves analytics **não** aparecem no JSON (`response_model_exclude_none`).
+
+**Faixas de sweep / âncoras de ablação (SSOT serving):**
+
+| Variável | low | high |
+|----------|-----|------|
+| `db_sgf` | 465 | 515 |
+| `carga_alcalina` | 17,5 | 21,0 |
+| `kappa` | 15,0 | 18,5 |
+| `casca_pct` | 0 | 1,5 |
+| `tpc` | 45 | 90 |
+| `extrativo_at` | 1,0 | 3,5 |
+| `idade` | 4,0 | 10,0 |
+
+Ablação: pool = as 7 variáveis acima; âncora = `(low+high)/2`; `delta_tsa = tsa_ablated - tsa_dia`. Mix/VMI/classe fora do pool.
 
 **Features do modelo (13):**  
 `Carga_Alcalina`, `Kappa`, `Prod_alcali_class`, `DB_SGF`, `Idade`, `TPC`, `pct_AB`, `pct_DMG`, `vmi_le_021`, `vmi_021_025`, `vmi_gt_025`, `Extrativo_AT`, `Casca_pct`.

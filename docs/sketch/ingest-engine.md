@@ -290,6 +290,7 @@ Registro completo: `DECISOES_GIFI.md`.
 | `docs/kb/` (`gifi-domain`, `gifi-ingest`, `spreadsheet-connectors`) | KB AgentSpec do Ingest (v0.2.4, 2026-07-10) |
 | `docs/kb/gifi-domain/specs/template_cenario_v0.yaml` | Contrato de upload Modo A/B (bootstrap Camada 1) |
 | `docs/kb/REANALISE_INGEST_COBERTURA.md` | Gap analysis pós-KBs/agentes — **0 KBs/agentes novos**; só extensões P1 |
+| `docs/analysis/GAP_INGEST_ENGINE_FONTES.md` | Gap plano × fontes (`src/ingest/`) — débitos P0/P1 pós-Marco 1 (2026-07-13) |
 | Este arquivo | Plano macro do sistema de ingestão |
 
 ---
