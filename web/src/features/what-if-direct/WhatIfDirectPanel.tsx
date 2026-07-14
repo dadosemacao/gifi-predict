@@ -10,13 +10,18 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input, Label } from "@/components/ui/input"
 import { FORECAST_EXAMPLE } from "@/features/operational-forecast/forecastSample"
+import { LocalDetractorsList } from "@/features/what-if-direct/LocalDetractorsList"
+import { SensitivityChart } from "@/features/what-if-direct/SensitivityChart"
 import {
   PROCESS_FIELDS,
   processVariablesSchema,
   type ProcessVariablesValues,
 } from "@/schemas/processSchema"
 import { fetchPredictTsaStatus, postPredictTsa } from "@/services/predictTsaApi"
-import type { PredictTsaResponse } from "@/types/predictTsa"
+import {
+  SENSITIVITY_VARIABLE_OPTIONS,
+  type PredictTsaResponse,
+} from "@/types/predictTsa"
 
 const EXAMPLE: ProcessVariablesValues = {
   carga_alcalina: FORECAST_EXAMPLE.carga_alcalina,
@@ -41,7 +46,15 @@ function fmt(n: number) {
 
 export function WhatIfDirectPanel() {
   const [result, setResult] = useState<PredictTsaResponse | null>(null)
-  const mutation = useMutation({ mutationFn: postPredictTsa })
+  const [includeAnalytics, setIncludeAnalytics] = useState(true)
+  const [sensitivityVariable, setSensitivityVariable] = useState("db_sgf")
+  const mutation = useMutation({
+    mutationFn: (values: ProcessVariablesValues) =>
+      postPredictTsa(values, {
+        includeAnalytics,
+        sensitivityVariable: includeAnalytics ? sensitivityVariable : undefined,
+      }),
+  })
   const statusQuery = useQuery({
     queryKey: ["predict-tsa-status"],
     queryFn: fetchPredictTsaStatus,
@@ -63,6 +76,10 @@ export function WhatIfDirectPanel() {
     setResult(null)
     setResult(await mutation.mutateAsync(values))
   }
+
+  const variableLabel =
+    SENSITIVITY_VARIABLE_OPTIONS.find((o) => o.value === (result?.sensitivity_variable ?? sensitivityVariable))
+      ?.label ?? sensitivityVariable
 
   return (
     <div className="space-y-6">
@@ -99,6 +116,33 @@ export function WhatIfDirectPanel() {
                 </div>
               ))}
             </div>
+            <div className="flex flex-wrap items-end gap-4">
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={includeAnalytics}
+                  onChange={(e) => setIncludeAnalytics(e.target.checked)}
+                />
+                Incluir analytics (curva + top-3)
+              </label>
+              {includeAnalytics && (
+                <div className="space-y-1">
+                  <Label htmlFor="wif-sensitivity-var">Variável de sensibilidade</Label>
+                  <select
+                    id="wif-sensitivity-var"
+                    className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm"
+                    value={sensitivityVariable}
+                    onChange={(e) => setSensitivityVariable(e.target.value)}
+                  >
+                    {SENSITIVITY_VARIABLE_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
             {mutation.error && <Alert>{mutation.error.message}</Alert>}
             <div className="flex flex-wrap gap-2">
               <Button type="submit" disabled={mutation.isPending}>
@@ -117,7 +161,7 @@ export function WhatIfDirectPanel() {
           <CardHeader>
             <CardTitle>Resultado</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm text-slate-600">TSA estimada (t/dia)</p>
               <p className="text-3xl font-semibold text-slate-900">{fmt(result.tsa_dia)}</p>
@@ -128,6 +172,10 @@ export function WhatIfDirectPanel() {
             </p>
             <FieldOriginsPanel fieldOrigins={result.field_origins} />
             <FieldWarnings warnings={result.warnings} />
+            {result.sensitivity && result.sensitivity.length > 0 && (
+              <SensitivityChart data={result.sensitivity} variableLabel={variableLabel} />
+            )}
+            {result.detractors && <LocalDetractorsList detractors={result.detractors} />}
           </CardContent>
         </Card>
       )}

@@ -17,6 +17,17 @@ export type PredictTsaRequest = {
   pct_dmg?: number
 }
 
+export type SensitivityPoint = {
+  value: number
+  tsa_dia: number
+}
+
+export type LocalDetractor = {
+  feature: string
+  delta_tsa: number
+  method: "local_ablation"
+}
+
 export type PredictTsaResponse = {
   product: "what_if_direct"
   model_id: string
@@ -26,6 +37,10 @@ export type PredictTsaResponse = {
   metrics: HoldoutMetrics
   field_origins: FieldOrigins
   warnings: string[]
+  sensitivity?: SensitivityPoint[]
+  detractors?: LocalDetractor[]
+  sensitivity_variable?: string
+  sensitivity_steps?: number
 }
 
 export type PredictTsaStatus = {
@@ -40,3 +55,20 @@ export type PredictTsaStatus = {
 }
 
 export type PredictTsaStatusResponse = PredictTsaStatus
+
+export type PostPredictTsaOptions = {
+  includeAnalytics?: boolean
+  sensitivityVariable?: string
+  sensitivitySteps?: number
+  runId?: string
+}
+
+export const SENSITIVITY_VARIABLE_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "db_sgf", label: "DB SGF" },
+  { value: "carga_alcalina", label: "Carga alcalina" },
+  { value: "kappa", label: "Kappa" },
+  { value: "casca_pct", label: "% Casca" },
+  { value: "tpc", label: "TPC" },
+  { value: "extrativo_at", label: "Extrativo AT" },
+  { value: "idade", label: "Idade" },
+]

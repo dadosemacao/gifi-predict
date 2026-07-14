@@ -1,4 +1,9 @@
-import type { PredictTsaRequest, PredictTsaResponse, PredictTsaStatus } from "@/types/predictTsa"
+import type {
+  PostPredictTsaOptions,
+  PredictTsaRequest,
+  PredictTsaResponse,
+  PredictTsaStatus,
+} from "@/types/predictTsa"
 import { parseApiError } from "@/lib/errorMessages"
 
 async function readError(res: Response): Promise<string> {
@@ -12,8 +17,17 @@ export async function fetchPredictTsaStatus(): Promise<PredictTsaStatus> {
   return res.json()
 }
 
-export async function postPredictTsa(body: PredictTsaRequest): Promise<PredictTsaResponse> {
-  const res = await fetch("/api/predict-tsa", {
+export async function postPredictTsa(
+  body: PredictTsaRequest,
+  opts: PostPredictTsaOptions = {},
+): Promise<PredictTsaResponse> {
+  const qs = new URLSearchParams()
+  if (opts.includeAnalytics) qs.set("include_analytics", "true")
+  if (opts.sensitivityVariable) qs.set("sensitivity_variable", opts.sensitivityVariable)
+  if (opts.sensitivitySteps != null) qs.set("sensitivity_steps", String(opts.sensitivitySteps))
+  if (opts.runId) qs.set("run_id", opts.runId)
+  const suffix = qs.toString() ? `?${qs}` : ""
+  const res = await fetch(`/api/predict-tsa${suffix}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
