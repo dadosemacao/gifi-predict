@@ -35,10 +35,17 @@ def predict_tsa_status(
     )
 
 
-@router.post("/api/predict-tsa", response_model=PredictTsaResponse)
+@router.post(
+    "/api/predict-tsa",
+    response_model=PredictTsaResponse,
+    response_model_exclude_none=True,
+)
 def predict_tsa(
     body: PredictTsaRequest,
     run_id: str | None = Query(default=None),
+    include_analytics: bool = Query(default=False),
+    sensitivity_variable: str = Query(default="db_sgf"),
+    sensitivity_steps: int = Query(default=15),
 ) -> PredictTsaResponse:
     settings = ServingSettings.from_yaml()
     try:
@@ -47,6 +54,9 @@ def predict_tsa(
             repo_root=settings.repo_root,
             models_root=settings.forecast_models_root,
             run_id=run_id,
+            include_analytics=include_analytics,
+            sensitivity_variable=sensitivity_variable,
+            sensitivity_steps=sensitivity_steps,
         )
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

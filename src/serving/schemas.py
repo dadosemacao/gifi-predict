@@ -146,6 +146,17 @@ class PredictTsaRequest(ProcessVariablesInput):
     """What-if direto (Produto B) — TSA a partir só das variáveis de processo."""
 
 
+class SensitivityPoint(BaseModel):
+    value: float
+    tsa_dia: float
+
+
+class LocalDetractorOut(BaseModel):
+    feature: str
+    delta_tsa: float
+    method: Literal["local_ablation"]
+
+
 class PredictTsaResponse(BaseModel):
     product: Literal["what_if_direct"]
     model_id: str
@@ -155,6 +166,10 @@ class PredictTsaResponse(BaseModel):
     metrics: HoldoutMetricsResponse
     field_origins: FieldOriginsResponse
     warnings: list[str] = Field(default_factory=list)
+    sensitivity: list[SensitivityPoint] | None = None
+    detractors: list[LocalDetractorOut] | None = None
+    sensitivity_variable: str | None = None
+    sensitivity_steps: int | None = None
 
 
 class PredictTsaStatusResponse(BaseModel):
