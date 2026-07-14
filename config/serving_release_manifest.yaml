@@ -1,0 +1,31 @@
+# Manifesto mínimo do pacote de release (serving / Azure bake)
+# Autor: Emerson Antônio
+# Data: 2026-07-14
+
+must_paths:
+  - "models/candidates/{run_id}"
+  - "reports/acceptance/{run_id}/acceptance_report.json"
+  - "models/primeira_base/current_forecast.json"
+  - "models/primeira_base/current_tsa.json"
+  - "models/ingest/extrativo_serving_imputer.joblib"
+  - "models/ingest/current_extr_imputer.json"
+  - "reports/TSA_FORECAST_OPERACIONAL.json"
+  - "reports/TSA_PRIMEIRA_BASE_MODELING.json"
+
+optional_paths:
+  - "models/candidates/current_champion.json"
+
+pointer_rules:
+  - pointer: "models/primeira_base/current_forecast.json"
+    artifact_key: "artifact_path"
+    optional: false
+  - pointer: "models/primeira_base/current_tsa.json"
+    artifact_key: "artifact_path"
+    optional: false
+  - pointer: "models/ingest/current_extr_imputer.json"
+    artifact_key: "artifact_path"
+    optional: false
+  - pointer: "models/candidates/current_champion.json"
+    artifact_key: "champion_dir"
+    optional: true
+    resolve_as: directory

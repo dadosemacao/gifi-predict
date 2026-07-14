@@ -1,0 +1,44 @@
+# Compose local — espelho do contrato App Service (1 serviço + volume logs)
+# Autor: Emerson Antônio
+# Data: 2026-07-14
+#
+# Uso:
+#   export RELEASE_RUN_ID='2026-07-10T10:54:42.849161Z'
+#   docker compose up --build -d
+#   ./scripts/smoke_serving_docker.sh
+#
+# AVISO: publish só em 127.0.0.1 — não expor em rede até auth (fase E).
+# Não escalar réplicas — audit SQLite no volume compartilhado.
+
+services:
+  serving:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RELEASE_RUN_ID: ${RELEASE_RUN_ID:?Defina RELEASE_RUN_ID (saída do pack)}
+    image: gifi-serving:local
+    ports:
+      # HOST_PORT default 8000; use outro se ocupado (ex.: HOST_PORT=18000)
+      - "127.0.0.1:${HOST_PORT:-8000}:8000"
+    environment:
+      PORT: "8000"
+    command: ["sh", "-c", "serve --host 0.0.0.0 --port $${PORT:-8000}"]
+    volumes:
+      - serving_audit:/app/logs
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/release-status')",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: "no"
+
+volumes:
+  serving_audit:

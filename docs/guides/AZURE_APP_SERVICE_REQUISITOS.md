@@ -36,7 +36,10 @@ Azure App Service (Linux + container)
         └── VNet + Private Endpoint  (isolamento)
 ```
 
-Não há `Dockerfile` no repositório hoje — packaging container é **pré-requisito de implementação**.
+**Atualização 2026-07-14:** há `Dockerfile` + `docker-compose.yml` +
+`scripts/pack_serving_release.py` para validação **local** (MVP). Ver
+[`TAREFA_DOCKER_SERVING_PROD.md`](TAREFA_DOCKER_SERVING_PROD.md). Provisionamento
+Azure (ACR, App Service, PE) permanece fora do MVP local.
 
 ---
 
@@ -268,6 +271,9 @@ Ferramenta: Azure DevOps ou GitHub Actions (a definir pela TI Veracel).
 ---
 
 ## 13. Estimativa de entregáveis de implementação (próximos passos)
+
+Checklist executável e decisões fechadas (1 container, Blob + bake, jobs locais):
+[`TAREFA_DOCKER_SERVING_PROD.md`](TAREFA_DOCKER_SERVING_PROD.md).
 
 Ordem sugerida após este levantamento:
 

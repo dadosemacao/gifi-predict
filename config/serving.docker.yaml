@@ -1,0 +1,20 @@
+# Overlay bakeado na imagem Docker (não usar em serve run local).
+# Autor: Emerson Antônio
+# Data: 2026-07-14
+# Atualizar run ids ao trocar o pacote em releases/{run_id}/.
+
+host: "0.0.0.0"
+port: 8000
+default_run_id: "2026-07-10T10:54:42.849161Z"
+default_forecast_run_id: "2026-07-13T143544Z"
+default_tsa_run_id: "2026-07-13T143520Z"
+forecast_models_root: "models/primeira_base"
+reports_root: "reports/acceptance"
+static_dir: "web/dist"
+template_path: "docs/kb/gifi-domain/specs/template_cenario_v0.yaml"
+cors_origins: []
+demo_default: false
+ephemeral_prefix: "ui-"
+audit_enabled: true
+audit_db_path: "logs/serving_audit.db"
+audit_max_body_bytes: 65536

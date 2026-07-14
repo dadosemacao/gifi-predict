@@ -26,7 +26,26 @@
   a planilha consolidada `.xlsx` (~6 MB no total) deixam de ser rastreados.
 - **`models/`** — confirmado fora do versionamento (regra `/models/` mantida).
 
-### Adicionado (SDD — Phase 0–1 Docker Serving Prod)
+### Adicionado (SDD — Phase 4 Ship Docker Serving Prod)
+
+- **`.claude/sdd/archive/DOCKER_SERVING_PROD/SHIPPED_2026-07-14.md`** — arquivo
+  da feature (BRAINSTORM/DEFINE/DESIGN/BUILD_REPORT); fases A–C packaging local
+  concluídas; Azure D/E e `release_ok=true` no backlog.
+
+### Adicionado (Infra — Docker Serving Prod MVP)
+
+- **`Dockerfile`** multi-stage (Node 20 → Python 3.12) imagem `gifi-serving`.
+- **`docker-compose.yml`** — 1 serviço, publish `127.0.0.1:${HOST_PORT:-8000}`,
+  volume `serving_audit`, healthcheck `/api/release-status`.
+- **`scripts/pack_serving_release.py`** + `config/serving_release_manifest.yaml`
+  → `releases/{run_id}/` (gitignored).
+- **`config/serving.docker.yaml`** — overlay bakeado (`demo_default: false`).
+- **`scripts/smoke_serving_docker.sh`** — smoke status + SPA (localhost).
+- **`.dockerignore`**, testes `tests/scripts/test_pack_serving_release.py`.
+- Entrypoint: `serve --host 0.0.0.0 --port $PORT` (Typer single-command).
+- BUILD_REPORT: `.claude/sdd/reports/BUILD_REPORT_DOCKER_SERVING_PROD.md`.
+
+### Adicionado (SDD — Phase 0–2 Docker Serving Prod)
 
 - **`.claude/sdd/features/BRAINSTORM_DOCKER_SERVING_PROD.md`** — exploração do MVP
   container local (release pack + multi-stage Docker + compose): escopo fases A–C,
@@ -35,6 +54,10 @@
   (clareza 15/15): manifesto de release, Dockerfile multi-stage, compose 1 serviço,
   ATs AT-DSP-001…009, contrato `ReleaseStatusResponse` no smoke, zero mudança
   obrigatória em `src/serving`; pronto para `/design`.
+- **`.claude/sdd/features/DESIGN_DOCKER_SERVING_PROD.md`** — arquitetura Phase 2
+  (v1.1 pós-judge advisory): pack `releases/{run_id}` + overlay
+  `serving.docker.yaml`, Dockerfile multi-stage, compose bind `127.0.0.1`,
+  invariants bind cloud, rollback local, réplica única; pronto para `/build`.
 
 ### Adicionado (Documentação — Docker Prod)
 
